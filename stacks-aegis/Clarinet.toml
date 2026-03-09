@@ -1,0 +1,34 @@
+[project]
+name = 'stacks-aegis'
+description = ''
+authors = []
+telemetry = false
+cache_dir = './.cache'
+requirements = []
+[contracts.aegis-traits]
+path = 'contracts/aegis-traits.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.aegis-vault]
+path = 'contracts/aegis-vault.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.risk-oracle]
+path = 'contracts/risk-oracle.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.safe-vault]
+path = 'contracts/safe-vault.clar'
+clarity_version = 2
+epoch = 2.5
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
