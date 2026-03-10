@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stacks Aegis | Mission Control</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navbar -->
+    <header class="navbar neo-panel">
+      <div class="brand">
+        <div class="logo"></div>
+        <h1>STACKS AEGIS</h1>
+      </div>
+      <div class="nav-controls">
+        <span class="network-badge"><span class="pulse green"></span> MAINNET</span>
+        <button class="btn btn-connect" id="btnConnect" onclick="connectWallet()">CONNECT WALLET</button>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+
+      <!-- ========================================== -->
+      <!-- STATE 1: PROTECT (Position Setup)          -->
+      <!-- ========================================== -->
+      <section class="panel neo-panel protect-panel" id="protectPanel">
+        <div class="panel-header">
+          <h2>AEGIS GUARD CONFIGURATION</h2>
+          <span class="status-badge sys-tag">SETUP</span>
+        </div>
+        <p class="section-desc">Select a protected strategy and configure your circuit breaker safety threshold.</p>
+        
+        <div class="strategy-cards">
+          <div class="strategy-card neo-box selected">
+            <div class="strat-header">
+              <span class="strat-title">Bitflow sBTC LP</span>
+              <span class="sys-tag safe-text">TVL: ₿45.2</span>
+            </div>
+            <p class="strat-desc">Automated liquidity provisioning with dynamic Aegis protection.</p>
+            <span class="strat-health">Oracle Health: 100%</span>
+          </div>
+          <div class="strategy-card neo-box">
+            <div class="strat-header">
+              <span class="strat-title">Zest Lending</span>
+              <span class="sys-tag safe-text">TVL: ₿120.5</span>
+            </div>
+            <p class="strat-desc">Yield generation backed by Zest Protocol lending pools.</p>
+            <span class="strat-health">Oracle Health: 99.8%</span>
+          </div>
+        </div>
+
+        <div class="threshold-config neo-box">
+          <div class="config-header">
+            <h3>PROTECTION THRESHOLD</h3>
+            <span class="value-display data-mono" id="sliderValueDisplay">&lt; 0.98</span>
+          </div>
+          <p class="tradeoff-desc" id="tradeoffDesc">Balanced Profile: Faster exits, moderate yield interruption risk.</p>
+          
+          <input type="range" min="95" max="99" value="98" class="neo-slider" id="riskSlider" oninput="updateSlider()">
+          
+          <div class="slider-labels">
+            <span>Aggressive (95)</span>
+            <span>Safe (99)</span>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary" id="btnActivate" onclick="activateAegis()">ACTIVATE AEGIS SHIELD</button>
+      </section>
+
+
+      <!-- ========================================== -->
+      <!-- STATE 2: MONITOR (Mission Control Dashboard)-->
+      <!-- ========================================== -->
+      <div class="monitor-container" id="monitorPanel" style="display: none;">
+        
+        <!-- System Status & Stability -->
+        <section class="panel neo-panel health-panel">
+          <div class="panel-header">
+            <h2>SYSTEM STATUS</h2>
+            <span class="status-badge safe" id="overallStatusBadge">SAFE</span>
+          </div>
+          
+          <div class="health-metrics">
+            <div class="metric-card">
+              <span class="metric-label">STABILITY SCORE</span>
+              <div class="score-display neo-box">
+                <span class="percentage data-mono" id="scoreText">1.00</span>
+              </div>
+              <p class="metric-subtext">sBTC/BTC PEG</p>
+            </div>
+
+            <div class="metric-info neo-box">
+              <div class="info-row">
+                <span class="meta-label">ORACLE LATENCY</span>
+                <span id="freshnessDisplay" class="data-value safe-text data-mono">2 BLOCKS</span>
+              </div>
+              <div class="info-row">
+                <span class="meta-label">TRIP THRESHOLD</span>
+                <span class="data-value data-mono" id="activeThresholdDisplay">0.98</span>
+              </div>
+              <div class="info-row">
+                <span class="meta-label">LIQUIDITY DEPTH</span>
+                <span class="data-value sys-tag">SUFFICIENT</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Vault Exposure & Ecosystem Radar -->
+        <div class="monitor-col-2">
+          
+          <!-- Vault Exposure -->
+          <section class="panel neo-panel exposure-panel">
+            <div class="panel-header">
+              <h2>VAULT EXPOSURE</h2>
+            </div>
+            <div class="stat-box neo-box">
+              <span class="stat-label">PROTECTED CAPITAL</span>
+              <span class="stat-value highlight data-mono" id="protectedCapitalAmount">₿ 14.25</span>
+              <span class="stat-sub sys-tag" id="activeStrategyName">Bitflow sBTC LP</span>
+            </div>
+          </section>
+
+          <!-- Stacks Risk Radar -->
+          <section class="panel neo-panel radar-panel">
+            <div class="panel-header">
+              <h2>STACKS RISK RADAR</h2>
+            </div>
+            <p class="section-desc">Ecosystem protocol health monitoring.</p>
+            <div class="radar-list">
+              <div class="radar-item neo-box">
+                <span class="proto-name">Bitflow</span>
+                <span class="sys-tag safe-text">SAFE</span>
+              </div>
+              <div class="radar-item neo-box">
+                <span class="proto-name">Zest Protocol</span>
+                <span class="sys-tag warning-text">WARNING</span>
+              </div>
+              <div class="radar-item neo-box">
+                <span class="proto-name">Experimental Pools</span>
+                <span class="sys-tag panic-text">HIGH RISK</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Action Center -->
+        <section class="panel neo-panel action-panel">
+          <div class="panel-header">
+            <h2>COMMAND ACTIONS</h2>
+          </div>
+          <div class="actions">
+            <!-- Used to simulate Peg dropping to test React logic -->
+            <button class="btn btn-secondary" onclick="simulatePanic()">SIMULATE DEPEG EVENT</button>
+          </div>
+        </section>
+
+      </div>
+
+
+      <!-- ========================================== -->
+      <!-- STATE 3 & 4: REACT & RECOVER (Emergency)   -->
+      <!-- ========================================== -->
+      <section class="panel neo-panel emergency-panel" id="emergencyPanel" style="display: none;">
+        <div class="panel-header alert-header">
+          <h2>AEGIS EMERGENCY PROTOCOL</h2>
+          <span class="status-badge panic" id="circuitBadge">CIRCUIT BREAKER ACTIVE</span>
+        </div>
+        
+        <!-- React Phase: Timeline -->
+        <div class="timeline-container neo-box" id="timelineContainer">
+          <h3 class="timeline-title">INCIDENT TIMELINE</h3>
+          <ul class="timeline" id="eventTimeline">
+            <!-- JS inserts events here -->
+          </ul>
+        </div>
+
+        <!-- Recover Phase: Post-Event Actions -->
+        <div class="recovery-container" id="recoveryContainer" style="display: none;">
+          <div class="recovery-status neo-box">
+            <span class="sys-tag safe-text">✔ FUNDS SECURED IN SAFE VAULT</span>
+            <p>Capital is currently held in a non-custodial staging vault awaiting user directive.</p>
+          </div>
+
+          <div class="recovery-actions">
+            <button class="btn btn-primary" onclick="resetWorkflow()">RE-ENTER PROTECTED STRATEGY</button>
+            <button class="btn btn-secondary">MOVE TO SAFER PROTOCOL</button>
+            <button class="btn btn-secondary">WITHDRAW FUNDS TO WALLET</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
