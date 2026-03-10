@@ -1,80 +1,165 @@
 // app.js
-// Logic for Stacks Aegis Command Center
+// Logic for Stacks Aegis Mission Control
 
-const scoreText = document.getElementById("scoreText");
-const scoreCircle = document.getElementById("scoreCircle");
-const circularChart = document.querySelector(".circular-chart");
-const overallStatusBadge = document.getElementById("overallStatusBadge");
-const freshnessDisplay = document.getElementById("freshnessDisplay");
-const systemLogs = document.getElementById("systemLogs");
+// --- DOM elements ---
+const protectPanel = document.getElementById('protectPanel');
+const monitorPanel = document.getElementById('monitorPanel');
+const emergencyPanel = document.getElementById('emergencyPanel');
+const recoveryContainer = document.getElementById('recoveryContainer');
+const eventTimeline = document.getElementById('eventTimeline');
 
-// UI State Management
-function addLog(message, level = "info") {
-  const entry = document.createElement("div");
-  entry.className = `log-entry ${level}`;
+const riskSlider = document.getElementById('riskSlider');
+const sliderValueDisplay = document.getElementById('sliderValueDisplay');
+const tradeoffDesc = document.getElementById('tradeoffDesc');
+const activeThresholdDisplay = document.getElementById('activeThresholdDisplay');
+
+const scoreText = document.getElementById('scoreText');
+const overallStatusBadge = document.getElementById('overallStatusBadge');
+const freshnessDisplay = document.getElementById('freshnessDisplay');
+const circuitBadge = document.getElementById('circuitBadge');
+
+const btnConnect = document.getElementById('btnConnect');
+
+let walletConnected = false;
+let currentThreshold = 0.98;
+
+// --- Phase 1: Protect (Setup) ---
+function connectWallet() {
+  walletConnected = true;
+  btnConnect.innerText = "0xSP3...A8F";
+  btnConnect.style.background = "var(--safe)";
+  btnConnect.style.color = "#FFFFFF";
+  addTimelineEvent("Wallet Connected: 0xSP3...A8F", "safe");
+}
+
+function updateSlider() {
+  const val = riskSlider.value;
+  currentThreshold = val / 100;
   
-  // Format time clearly for fintech logging
+  sliderValueDisplay.innerText = `< ${currentThreshold}`;
+  activeThresholdDisplay.innerText = currentThreshold;
+
+  if (val == 99) {
+    tradeoffDesc.innerText = "Safe Profile: Highly sensitive exit. High yield interruption risk.";
+  } else if (val == 98) {
+    tradeoffDesc.innerText = "Balanced Profile: Faster exits, moderate yield interruption risk.";
+  } else if (val <= 97) {
+    tradeoffDesc.innerText = "Aggressive Profile: Lower threshold execution. Maximum yield continuation.";
+  }
+  
+  // Update slider bar fill visually
+  const percentage = (val - 95) / (99 - 95) * 100;
+  riskSlider.style.background = `linear-gradient(to right, var(--primary-accent) ${percentage}%, var(--bg-panel) ${percentage}%)`;
+}
+
+// Strategy selection toggle
+document.querySelectorAll('.strategy-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    const stratName = card.querySelector('.strat-title').innerText;
+    document.getElementById('activeStrategyName').innerText = stratName;
+  });
+});
+
+function activateAegis() {
+  if (!walletConnected) {
+    alert("Please connect your wallet first.");
+    return;
+  }
+  
+  // Transition logic: Protect -> Monitor
+  protectPanel.style.display = 'none';
+  monitorPanel.style.display = 'flex';
+  
+  addTimelineEvent(`Aegis Shield Activated. Threshold: < ${currentThreshold}`, "safe");
+}
+
+// --- Phase 2: Monitor & Tooling ---
+function addTimelineEvent(message, status="critical") {
   const timeStr = new Date().toISOString().split('T')[1].slice(0, 8);
-  entry.innerText = `[${timeStr}] ${message}`;
   
-  systemLogs.insertBefore(entry, systemLogs.firstChild);
+  const li = document.createElement("li");
+  li.className = `tl-event ${status}`;
+  
+  li.innerHTML = `
+    <span class="tl-time">${timeStr}</span>
+    <span class="tl-desc">${message}</span>
+  `;
+  
+  // Prepend to show latest on top
+  eventTimeline.insertBefore(li, eventTimeline.firstChild);
 }
 
 function updateVisuals(score, statusStr, colorClass) {
-  // Update Score Text
   scoreText.innerText = score.toFixed(2);
-  
-  // Since we removed the circle SVG visually for a more brutalist look, 
-  // we update the stroke for the DOM tree but it stays hidden.
-  const percentage = (score / 1.0) * 100;
-  scoreCircle.setAttribute("stroke-dasharray", `${percentage}, 100`);
-  
-  // Update Classes
-  circularChart.className = `circular-chart ${colorClass}`;
   overallStatusBadge.className = `status-badge ${colorClass}`;
   overallStatusBadge.innerText = statusStr;
 }
 
+// --- Phase 3 & 4: React & Recover (Simulation) ---
 function simulatePanic() {
-  addLog("WARNING: High volatility detected. Peg instability confirmed.", "warn");
+  // Phase logic: Monitor -> React
+  emergencyPanel.style.display = 'flex';
+  recoveryContainer.style.display = 'none'; // Ensure recovery is hidden initially
   
-  // Drop score
+  // Mutate DOM to Red
+  document.body.style.borderTop = "8px solid var(--panic)";
+  circuitBadge.innerText = "CIRCUIT BREAKER ACTIVE";
+  circuitBadge.className = "status-badge panic";
+  
   updateVisuals(0.95, "PANIC", "panic");
+  freshnessDisplay.innerText = "STALE (6 BLOCKS)";
+  freshnessDisplay.className = "data-value panic-text data-mono";
+
+  // Simulate Event Timeline population
+  addTimelineEvent(`Depeg detected. sBTC/BTC dropped below ${currentThreshold}`, "critical");
   
   setTimeout(() => {
-    addLog("CRITICAL: SCORE < 0.98. CIRCUIT BREAKER ACTIVE.", "crit");
+    addTimelineEvent("Circuit breaker triggered automatically.", "critical");
     document.getElementById("stateMonitor").classList.remove("active");
     document.getElementById("stateCircuit").classList.add("active");
     
-    // Simulate UI Freeze using thick red border
-    document.body.style.borderTop = "8px solid var(--panic)";
-    freshnessDisplay.innerText = "STALE (6 BLOCKS)";
-    freshnessDisplay.className = "data-value panic-text data-mono";
-    
     setTimeout(() => {
-      addLog("ACTION: Automated Safe-Withdraw executed. Protocol frozen.", "info");
-      document.getElementById("stateCircuit").classList.remove("active");
-      document.getElementById("stateSafe").classList.add("active");
-    }, 2000);
+      addTimelineEvent("Funds withdrawn from active pool.", "critical");
+      
+      setTimeout(() => {
+        addTimelineEvent("Funds secured in Safe Vault.", "safe");
+        
+        // Phase logic: React -> Recover
+        document.getElementById("stateCircuit").classList.remove("active");
+        document.getElementById("stateSafe").classList.add("active");
+        
+        // Show recovery action panel
+        recoveryContainer.style.display = 'flex';
+        circuitBadge.innerText = "AWAITING USER ACTION";
+        circuitBadge.className = "status-badge warning";
+        
+      }, 1500);
+      
+    }, 1500);
     
   }, 1000);
 }
 
-function simulateRecovery() {
-  addLog("INFO: Oracles stabilized. Protocol manual reset authorized.", "info");
+function resetWorkflow() {
+  // Reset sequence completely back to Protect Setup
+  emergencyPanel.style.display = 'none';
+  monitorPanel.style.display = 'none';
+  protectPanel.style.display = 'flex';
   
-  // Restore score
-  updateVisuals(1.00, "SECURE", "safe");
-  document.getElementById("stateSafe").classList.remove("active");
-  document.getElementById("stateMonitor").classList.add("active");
+  updateVisuals(1.00, "SAFE", "safe");
+  
   document.body.style.borderTop = "none";
   freshnessDisplay.innerText = "2 BLOCKS";
   freshnessDisplay.className = "data-value safe-text data-mono";
   
-  addLog("System fully recovered. Monitoring resumed.", "info");
+  document.getElementById("stateSafe").classList.remove("active");
+  document.getElementById("stateMonitor").classList.add("active");
+  
+  // Clear timeline
+  eventTimeline.innerHTML = '';
 }
 
-// Initial Log
-setTimeout(() => {
-  addLog("Connected to Stacks Mainnet node. 🚀");
-}, 500);
+// Init slider UI
+updateSlider();
