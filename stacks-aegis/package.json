@@ -1,4 +1,3 @@
-
 {
   "name": "stacks-aegis-tests",
   "version": "1.0.0",
@@ -7,9 +6,11 @@
   "private": true,
   "scripts": {
     "dev": "vite dashboard",
+    "update-readme": "node update-readme.js",
     "test": "vitest run",
     "test:report": "vitest run -- --coverage --costs",
-    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\""
+    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
@@ -21,5 +22,8 @@
     "vite": "^5.1.4",
     "vitest": "^1.3.1",
     "vitest-environment-clarinet": "^2.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
