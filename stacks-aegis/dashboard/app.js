@@ -12,8 +12,11 @@ const systemLogs = document.getElementById("systemLogs");
 function addLog(message, level = "info") {
   const entry = document.createElement("div");
   entry.className = `log-entry ${level}`;
-  const time = new Date().toLocaleTimeString();
-  entry.innerText = `[${time}] ${message}`;
+  
+  // Format time clearly for fintech logging
+  const timeStr = new Date().toISOString().split('T')[1].slice(0, 8);
+  entry.innerText = `[${timeStr}] ${message}`;
+  
   systemLogs.insertBefore(entry, systemLogs.firstChild);
 }
 
@@ -21,8 +24,8 @@ function updateVisuals(score, statusStr, colorClass) {
   // Update Score Text
   scoreText.innerText = score.toFixed(2);
   
-  // Calculate SVG stroke-dasharray (percentage of circumference)
-  // Max is ~100
+  // Since we removed the circle SVG visually for a more brutalist look, 
+  // we update the stroke for the DOM tree but it stays hidden.
   const percentage = (score / 1.0) * 100;
   scoreCircle.setAttribute("stroke-dasharray", `${percentage}, 100`);
   
@@ -33,24 +36,23 @@ function updateVisuals(score, statusStr, colorClass) {
 }
 
 function simulatePanic() {
-  addLog("WARNING: Oracle detected high volatility. sBTC threshold drops to 0.95...", "warn");
+  addLog("WARNING: High volatility detected. Peg instability confirmed.", "warn");
   
   // Drop score
   updateVisuals(0.95, "PANIC", "panic");
   
   setTimeout(() => {
-    addLog("CRITICAL: Stability Score < 0.98. Circuit Breaker triggered!", "crit");
+    addLog("CRITICAL: SCORE < 0.98. CIRCUIT BREAKER ACTIVE.", "crit");
     document.getElementById("stateMonitor").classList.remove("active");
     document.getElementById("stateCircuit").classList.add("active");
     
-    // Simulate UI Freeze
-    document.body.style.borderTop = "4px solid var(--panic)";
-    freshnessDisplay.innerText = "Stale (6 Blocks)";
-    freshnessDisplay.className = "value panic-text";
+    // Simulate UI Freeze using thick red border
+    document.body.style.borderTop = "8px solid var(--panic)";
+    freshnessDisplay.innerText = "STALE (6 BLOCKS)";
+    freshnessDisplay.className = "data-value panic-text data-mono";
     
     setTimeout(() => {
-      addLog("ACTION: Automated Safe-Withdraw executed successfully.", "info");
-      addLog("INFO: Vault capital routed to Safe Reserve Component.", "info");
+      addLog("ACTION: Automated Safe-Withdraw executed. Protocol frozen.", "info");
       document.getElementById("stateCircuit").classList.remove("active");
       document.getElementById("stateSafe").classList.add("active");
     }, 2000);
@@ -59,20 +61,20 @@ function simulatePanic() {
 }
 
 function simulateRecovery() {
-  addLog("INFO: Oracles stabilized. Manual reset initiated.", "info");
+  addLog("INFO: Oracles stabilized. Protocol manual reset authorized.", "info");
   
   // Restore score
-  updateVisuals(1.00, "Secure", "safe");
+  updateVisuals(1.00, "SECURE", "safe");
   document.getElementById("stateSafe").classList.remove("active");
   document.getElementById("stateMonitor").classList.add("active");
   document.body.style.borderTop = "none";
-  freshnessDisplay.innerText = "2 Blocks";
-  freshnessDisplay.className = "value safe-text";
+  freshnessDisplay.innerText = "2 BLOCKS";
+  freshnessDisplay.className = "data-value safe-text data-mono";
   
-  addLog("System fully recovered.", "safe-text");
+  addLog("System fully recovered. Monitoring resumed.", "info");
 }
 
 // Initial Log
 setTimeout(() => {
-  addLog("Connected to Stacks Mainnet (simulated) 🚀");
+  addLog("Connected to Stacks Mainnet node. 🚀");
 }, 500);

@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stacks Aegis Command Center</title>
+  <title>Stacks Aegis | Risk Control</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app-container">
@@ -31,11 +33,11 @@
         <div class="health-metrics">
           <div class="metric-card">
             <span class="metric-label">STABILITY SCORE</span>
-            <div class="score-display">
+            <div class="score-display neo-box">
               <svg viewBox="0 0 36 36" class="circular-chart safe">
                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path class="circle" id="scoreCircle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <text x="18" y="20.35" class="percentage" id="scoreText">1.00</text>
+                <text x="18" y="20.35" class="percentage data-mono" id="scoreText">1.00</text>
               </svg>
             </div>
             <p class="metric-subtext">sBTC/BTC PEG</p>
@@ -43,16 +45,16 @@
 
           <div class="metric-info neo-box">
             <div class="info-row">
-              <span>Oracle Freshness</span>
-              <span id="freshnessDisplay" class="value safe-text">2 Blocks</span>
+              <span class="meta-label">ORACLE LATENCY</span>
+              <span id="freshnessDisplay" class="data-value safe-text data-mono">2 BLOCKS</span>
             </div>
             <div class="info-row">
-              <span>Threshold Trigger</span>
-              <span class="value">0.98</span>
+              <span class="meta-label">TRIP THRESHOLD</span>
+              <span class="data-value data-mono">0.98</span>
             </div>
             <div class="info-row">
-              <span>Data Source</span>
-              <span class="value">Pyth Network</span>
+              <span class="meta-label">DATA SOURCE</span>
+              <span class="data-value sys-tag">PYTH NETWORK</span>
             </div>
           </div>
         </div>
@@ -68,8 +70,8 @@
         <div class="vault-stats">
           <div class="stat-box neo-box">
             <span class="stat-label">TOTAL PROTECTED VALUE</span>
-            <span class="stat-value highlight">₿ 14.25</span>
-            <span class="stat-sub">$945,120</span>
+            <span class="stat-value highlight data-mono">₿ 14.25</span>
+            <span class="stat-sub data-mono">$945,120.00</span>
           </div>
           
           <div class="active-protocols">
@@ -78,16 +80,16 @@
               <div class="protocol-item neo-box">
                 <div class="proto-info">
                   <div class="proto-icon zest">Z</div>
-                  <span>Zest Protocol</span>
+                  <span class="proto-name">Zest Protocol</span>
                 </div>
-                <span class="proto-amt">8.50 sBTC</span>
+                <span class="proto-amt data-mono">8.50 sBTC</span>
               </div>
               <div class="protocol-item neo-box">
                 <div class="proto-info">
                   <div class="proto-icon bitflow">B</div>
-                  <span>Bitflow</span>
+                  <span class="proto-name">Bitflow</span>
                 </div>
-                <span class="proto-amt">5.75 sBTC</span>
+                <span class="proto-amt data-mono">5.75 sBTC</span>
               </div>
             </div>
           </div>
@@ -103,25 +105,25 @@
         <div class="state-indicator neo-box">
           <div class="state-item active" id="stateMonitor">
             <div class="state-dot"></div>
-            <span>Monitoring active</span>
+            <span class="sys-tag">MONITORING ACTIVE</span>
           </div>
           <div class="state-item" id="stateCircuit">
             <div class="state-dot"></div>
-            <span>Circuit Breaker</span>
+            <span class="sys-tag">CIRCUIT BREAKER</span>
           </div>
           <div class="state-item" id="stateSafe">
             <div class="state-dot"></div>
-            <span>Safe Vault Migrating</span>
+            <span class="sys-tag">SAFE VAULT MIGRATING</span>
           </div>
         </div>
 
         <div class="actions">
-          <button class="btn btn-primary" id="btnTriggerSafeWithdraw" onclick="simulatePanic()">TRIGGER SAFE-WITHDRAW (SIMULATE)</button>
-          <button class="btn btn-secondary" onclick="simulateRecovery()">RESET TO SAFE STATE</button>
+          <button class="btn btn-primary" id="btnTriggerSafeWithdraw" onclick="simulatePanic()">TRIGGER FAST-EXIT (SIMULATE)</button>
+          <button class="btn btn-secondary" onclick="simulateRecovery()">RESET PROTOCOL STATE</button>
         </div>
         
         <div class="log-box neo-box" id="systemLogs">
-          <div class="log-entry">[System] Aegis initialized. Monitoring risk oracles...</div>
+          <div class="log-entry">[SYS] Aegis initialized. Monitoring risk oracles...</div>
         </div>
       </section>
     </main>
