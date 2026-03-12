@@ -12,6 +12,21 @@
 (define-map user-balances { token: principal, owner: principal } uint)
 
 ;; Public Functions
+;; @desc Receive funds evacuated from the protected vault during a panic.
+;; @param user; The original owner of the funds.
+;; @param amount; The amount moved.
+(define-public (receive-emergency-funds (user principal) (amount uint))
+  (begin
+    ;; In a real scenario, this would involve a SIP-010 transfer or internal accounting
+    ;; For this demo, we assume the sBTC is already moved here (as-contract) and we just ledger it.
+    (map-set user-balances 
+      { token: .sbtc-token, owner: user }
+      (+ (default-to u0 (map-get? user-balances { token: .sbtc-token, owner: user })) amount)
+    )
+    (ok true)
+  )
+)
+
 (define-public (deposit-safe (token <sip-010-trait>) (amount uint) (recipient principal))
   (begin
     ;; Route funds here via SIP-010 transfer
