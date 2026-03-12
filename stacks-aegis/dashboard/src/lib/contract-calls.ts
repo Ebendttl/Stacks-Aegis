@@ -1,4 +1,4 @@
-import { callReadOnlyFunction, cvToJSON, fetchCallReadOnlyFunction, cvToValue, standardPrincipalCV } from "@stacks/transactions";
+import { fetchCallReadOnlyFunction, cvToValue, standardPrincipalCV } from "@stacks/transactions";
 import { network, CONTRACT_ADDRESSES } from "./stacks-client";
 
 interface VaultStatus {
@@ -10,7 +10,7 @@ interface VaultStatus {
 
 const parseError = (error: any) => {
   console.error("Contract call error:", error);
-  return { error: error?.message || "Function call failed", code: error?.status || 500 };
+  return { data: null, error: { message: error?.message || "Function call failed", code: error?.status || 500 } };
 };
 
 /**
@@ -39,8 +39,9 @@ export async function fetchVaultStatus() {
         breakerActive: parsed["breaker-active"],
         threshold: Number(parsed["threshold"]),
         totalTvl: Number(parsed["total-tvl"]),
-        currentScore: 0, // Mocked for now, populated by other calls below
+        currentScore: 0, 
       } as VaultStatus,
+      error: null
     };
   } catch (err: any) {
     return parseError(err);
@@ -67,7 +68,7 @@ export async function fetchStabilityScore() {
 
     const parsed = cvToValue(resultCV);
     // expected result: (ok u100) -> returns { value: 100 } in JSON
-    return { data: Number(parsed?.value ?? parsed) };
+    return { data: Number(parsed?.value ?? parsed), error: null };
   } catch (err: any) {
     return parseError(err);
   }
@@ -99,7 +100,8 @@ export async function fetchRawFeeds() {
         pyth: Number(tuple.pyth),
         redstone: Number(tuple.redstone),
         onchain: Number(tuple.onchain),
-      }
+      },
+      error: null
     };
   } catch (err: any) {
     return parseError(err);
@@ -113,7 +115,7 @@ export async function fetchRawFeeds() {
  * Failure mode: Returns error object if API is down.
  */
 export async function fetchUserBalance(address: string) {
-  if (!address) return { data: 0 };
+  if (!address) return { data: 0, error: null };
   try {
     const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split(".");
     
@@ -127,7 +129,7 @@ export async function fetchUserBalance(address: string) {
     });
 
     const parsed = cvToValue(resultCV);
-    return { data: Number(parsed) };
+    return { data: Number(parsed), error: null };
   } catch (err: any) {
     return parseError(err);
   }
@@ -140,7 +142,7 @@ export async function fetchUserBalance(address: string) {
  * Failure mode: Returns error object if API is down.
  */
 export async function fetchSafeBalance(address: string) {
-  if (!address) return { data: 0 };
+  if (!address) return { data: 0, error: null };
   try {
     const [contractAddress, contractName] = CONTRACT_ADDRESSES.safeVault.split(".");
     
@@ -154,7 +156,7 @@ export async function fetchSafeBalance(address: string) {
     });
 
     const parsed = cvToValue(resultCV);
-    return { data: Number(parsed) };
+    return { data: Number(parsed), error: null };
   } catch (err: any) {
     return parseError(err);
   }
@@ -167,7 +169,7 @@ export async function fetchSafeBalance(address: string) {
  * Failure mode: Returns error object if API is down.
  */
 export async function fetchProtocolScore(contractPrincipal: string) {
-  if (!contractPrincipal) return { data: 50 }; // default
+  if (!contractPrincipal) return { data: 50, error: null }; // default
   try {
     const [contractAddress, contractName] = CONTRACT_ADDRESSES.riskOracle.split(".");
     
@@ -181,7 +183,7 @@ export async function fetchProtocolScore(contractPrincipal: string) {
     });
 
     const parsed = cvToValue(resultCV);
-    return { data: Number(parsed) };
+    return { data: Number(parsed), error: null };
   } catch (err: any) {
     return parseError(err);
   }

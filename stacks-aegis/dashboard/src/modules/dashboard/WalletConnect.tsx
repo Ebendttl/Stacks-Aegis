@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { showConnect, useConnect, Connect } from '@stacks/connect';
+import { showConnect } from '@stacks/connect';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';
 import { userSession } from '../../lib/stacks-client'; // We'll export userSession from stacks-client
@@ -40,26 +40,34 @@ export const useWalletStore = create<WalletStore>((set) => ({
 
 export function WalletConnect() {
   const { address, isConnected, connect, disconnect } = useWalletStore();
-  const { doDisconnect, authenticate, userSession } = useConnect();
 
   // Sync initial state if already connected
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const userData = userSession.loadUserData();
-      useWalletStore.setState({
-        isConnected: true,
-        address: Object.values(userData.profile.stxAddress)[1] || userData.profile.stxAddress.testnet,
-      });
+    if (userSession?.isUserSignedIn()) {
+      try {
+        const userData = userSession.loadUserData();
+        if (userData?.profile?.stxAddress) {
+          useWalletStore.setState({
+            isConnected: true,
+            address: userData.profile.stxAddress.testnet || Object.values(userData.profile.stxAddress)[0],
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load user data", e);
+      }
     }
-  }, [userSession]);
+  }, []);
 
   const handleConnect = () => {
-    // Prefer the zustand store's prompt
-    connect();
+    if (typeof window !== 'undefined') {
+      connect();
+    }
   };
 
   const handleDisconnect = () => {
-    doDisconnect();
+    if (userSession?.isUserSignedIn()) {
+      userSession.signUserOut();
+    }
     disconnect();
   };
 

@@ -1,5 +1,4 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -61,7 +60,7 @@ export function VaultExposure({ data }: { data?: VaultData & { refetch?: () => v
                   <Badge variant="safe">Active</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="sm" variant="outline" className="h-7 text-xs border-2 border-black rounded-none shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)]" onClick={() => txWithdraw(data!.userVaultBalance, () => data?.refetch())}>
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-2 border-black rounded-none shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)]" onClick={() => txWithdraw(data!.userVaultBalance, () => data?.refetch?.())}>
                     Withdraw
                   </Button>
                 </TableCell>
@@ -82,7 +81,7 @@ export function VaultExposure({ data }: { data?: VaultData & { refetch?: () => v
                       variant="outline" 
                       disabled={data?.breakerActive}
                       className="h-7 text-xs border-2 border-black rounded-none shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)] disabled:opacity-50" 
-                      onClick={() => txReEnterProtection(data!.userSafeBalance, !!data?.breakerActive, () => data?.refetch())}
+                      onClick={() => txReEnterProtection(data!.userSafeBalance, !!data?.breakerActive, () => data?.refetch?.())}
                     >
                       Re-enter Pools
                     </Button>
@@ -90,7 +89,7 @@ export function VaultExposure({ data }: { data?: VaultData & { refetch?: () => v
                       size="sm" 
                       variant="destructive" 
                       className="h-7 text-xs border-2 border-black rounded-none shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_rgba(0,0,0,1)]" 
-                      onClick={() => txSafeWithdraw(data!.userSafeBalance, () => data?.refetch())}
+                      onClick={() => txSafeWithdraw(data!.userSafeBalance, () => data?.refetch?.())}
                     >
                       Withdraw
                     </Button>

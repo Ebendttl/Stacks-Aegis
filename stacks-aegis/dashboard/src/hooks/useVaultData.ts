@@ -72,7 +72,7 @@ export function useVaultData() {
         fetchVaultStatus(),
         fetchStabilityScore(),
         fetchRawFeeds(),
-        stacksApiClient.infoApi.getCoreApiInfo()
+        (stacksApiClient as any).GET("/v2/info")
       ]);
 
       if (vaultRes.error) throw new Error(vaultRes.error.message);
@@ -112,7 +112,7 @@ export function useVaultData() {
         totalTvl: vaultRes.data!.totalTvl,
         rawFeeds: feedsRes.data!,
         protocolScores: pScores,
-        lastUpdatedBlock: infoRes.stacks_tip_height,
+        lastUpdatedBlock: (infoRes.data as any)?.stacks_tip_height || 0,
         isLoading: false,
         error: null
       }));

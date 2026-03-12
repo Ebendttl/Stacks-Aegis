@@ -26,13 +26,14 @@ export function EventTimeline() {
       try {
         const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split('.');
         // Check API documentation structure equivalent mapping for Node API SDK standard limits
-        const res = await stacksApiClient.smartContractsApi.getContractEventsById({
-          contractAddress,
-          contractName,
-          limit: 30, // Get recent to find 10 valid ones
+        const res = await stacksApiClient.GET("/extended/v1/contract/{contract_id}/events", {
+          params: {
+            path: { contract_id: `${contractAddress}.${contractName}` },
+            query: { limit: 30 }
+          }
         });
 
-        const logs = ((res as any).results || []).filter((e: ContractEvent) => e.event_type === 'smart_contract_log' && e.contract_log);
+        const logs = ((res.data as any)?.results || []).filter((e: ContractEvent) => e.event_type === 'smart_contract_log' && e.contract_log);
         
         const parsedLogs = logs.map((log: ContractEvent, i: number) => {
           const repr = log.contract_log!.value.repr || "";

@@ -1,12 +1,15 @@
-import { StacksTestnet } from "@stacks/network";
-import { Configuration, SmartContractsApi, AccountsApi, InfoApi } from "@stacks/blockchain-api-client";
+import { STACKS_TESTNET, createNetwork } from "@stacks/network";
+import { createClient } from "@stacks/blockchain-api-client";
 import { AppConfig, UserSession } from '@stacks/connect';
 
 export const appConfig = new AppConfig(['store_write', 'publish_data']);
 export const userSession = new UserSession({ appConfig });
 
 // Instantiate the testnet network
-export const network = new StacksTestnet({ url: import.meta.env.VITE_STACKS_API_URL || "https://stacks-node-api.testnet.stacks.co" });
+export const network = createNetwork({
+  ...STACKS_TESTNET,
+  client: { baseUrl: import.meta.env.VITE_STACKS_API_URL || "https://api.testnet.hiro.so" }
+});
 
 // Replace ST... with your actual testnet deployer address after running deploy-testnet.sh.
 // These are loaded from environment variables in Vite (.env.testnet)
@@ -19,13 +22,7 @@ export const CONTRACT_ADDRESSES = {
 
 export const SBTC_CONTRACT_ADDRESS = import.meta.env.VITE_SBTC_CONTRACT || "ST_YOUR_DEPLOYER_ADDRESS.mock-sbtc";
 
-// Export a configured stacksApiClient using @stacks/blockchain-api-client pointed at testnet.
-const apiConfig = new Configuration({
-  basePath: import.meta.env.VITE_STACKS_API_URL || "https://stacks-node-api.testnet.stacks.co",
+// Export a configured stacksApiClient using @stacks/blockchain-api-client createClient.
+export const stacksApiClient = createClient({
+  baseUrl: import.meta.env.VITE_STACKS_API_URL || "https://api.testnet.hiro.so",
 });
-
-export const stacksApiClient = {
-  smartContractsApi: new SmartContractsApi(apiConfig),
-  accountsApi: new AccountsApi(apiConfig),
-  infoApi: new InfoApi(apiConfig),
-};
