@@ -12,6 +12,7 @@
 ;; tx-sender at deployment time.
 ;; In a mainnet production environment, this would be replaced by a DAO governance or multisig principal.
 (define-constant ADMIN tx-sender)
+(define-constant IS-TESTNET false)
 
 ;; Price Feed Data Variables (simulating Pyth + RedStone + On-Chain)
 ;; Using data-vars to allow test simulation of depegs via set-feed.
@@ -94,5 +95,25 @@
     ;; State mutation
     (map-set protocol-safety-scores protocol score)
     (ok true)
+  )
+)
+
+;; @desc Test-only: Force set the stability score by simulating individual feed prices. Only allowed on testnet.
+;; The score calculation is: (average - PEG_MIN) / 500.
+;; To achieve a score of 50: average must be 975,000. So we set all feeds to 975,000.
+;; To achieve a score of 100: average must be 1,000,000. So we set all feeds to 1,000,000.
+(define-public (set-test-score (target-score uint))
+  (begin
+    (asserts! IS-TESTNET ERR-UNAUTHORIZED)
+    (asserts! (is-eq tx-sender ADMIN) ERR-UNAUTHORIZED)
+    (let
+      (
+        (target-feed (+ PEG-MIN (* target-score SCORE-DIVISOR)))
+      )
+      (var-set feed-pyth target-feed)
+      (var-set feed-redstone target-feed)
+      (var-set feed-onchain target-feed)
+      (ok true)
+    )
   )
 )
