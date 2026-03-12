@@ -2,9 +2,7 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';
 import { userSession } from '../../lib/stacks-client';
-
-// Extremely robust import strategy for @stacks/connect
-import * as ConnectModule from '@stacks/connect';
+import { showConnect, authenticate } from '@stacks/connect';
 
 interface WalletStore {
   address: string | null;
@@ -34,24 +32,14 @@ export const useWalletStore = create<WalletStore>((set) => ({
       },
     };
 
-    // Helper to find showConnect across various possible export patterns
-    const pkg = ConnectModule as any;
-    const launcher = pkg.showConnect || (pkg.default && pkg.default.showConnect) || (typeof pkg === 'function' ? pkg : null);
-
-    if (typeof launcher === 'function') {
-      try {
-        launcher(authOptions);
-      } catch (e) {
-        console.error("Failed to launch showConnect", e);
-        // Last resort: window injection check
-        if ((window as any).StacksProvider) {
-          alert("Please use the Stacks browser extension to connect.");
-        }
-      }
+    // Try showConnect first, then authenticate
+    if (typeof showConnect === 'function') {
+      showConnect(authOptions);
+    } else if (typeof authenticate === 'function') {
+      authenticate(authOptions);
     } else {
-      console.error("showConnect not found in @stacks/connect exports:", pkg);
-      // Force reload or fallback if possible
-      alert("Wallet connection module failed to load. Please refresh the page.");
+      console.error("Neither showConnect nor authenticate found in @stacks/connect", { showConnect, authenticate });
+      alert("Wallet connection module failed to initialize. Please refresh the page.");
     }
   },
   disconnect: () => {
