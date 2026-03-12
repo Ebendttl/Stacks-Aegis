@@ -1,5 +1,18 @@
+/**
+ * GROUND TRUTH - sBTC Balance Response (Verified for STDW8SCPAE0MX93M9MD0FSEMHQYB36X1MTZDFJKP)
+ * {
+ *   "fungible_tokens": {
+ *     "ST1F7MZ3GGKSG957BYBTX9TGPHE28B8QDR3PM8CQ.sbtc-token::sbtc-token": {
+ *       "balance": "400000000",
+ *       "total_sent": "0",
+ *       "total_received": "400000000"
+ *     }
+ *   }
+ * }
+ */
+
 import { fetchCallReadOnlyFunction, cvToValue, standardPrincipalCV } from "@stacks/transactions";
-import { network, CONTRACT_ADDRESSES } from "./stacks-client";
+import { network, CONTRACT_ADDRESSES, baseUrl } from "./stacks-client";
 
 interface VaultStatus {
   breakerActive: boolean;
@@ -15,25 +28,21 @@ const parseError = (error: any) => {
 
 /**
  * Calls `get-vault-status` on the aegis-vault contract.
- * @returns {Promise<{ data?: VaultStatus, error?: { message: string, code: number } }>} The parsed vault status.
- * Failure mode: Returns error object if the node is offline or the contract does not exist.
  */
 export async function fetchVaultStatus() {
   try {
     const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split(".");
     
-    // fetchCallReadOnlyFunction is easier for purely unauthenticated frontend reads than callReadOnlyFunction (which requires sender address)
     const resultCV = await fetchCallReadOnlyFunction({
       network,
       contractAddress,
       contractName,
       functionName: "get-vault-status",
       functionArgs: [],
-      senderAddress: contractAddress, // Safe placeholder for read-only
+      senderAddress: contractAddress,
     });
 
     const parsed = cvToValue(resultCV);
-    // clarity tuple result
     return {
       data: {
         breakerActive: parsed["breaker-active"],
@@ -50,8 +59,6 @@ export async function fetchVaultStatus() {
 
 /**
  * Calls `get-stability-score` on the risk-oracle contract.
- * @returns {Promise<{ data?: number, error?: { message: string, code: number } }>} The 0-100 stability score.
- * Failure mode: Returns error object if API is down.
  */
 export async function fetchStabilityScore() {
   try {
@@ -67,7 +74,6 @@ export async function fetchStabilityScore() {
     });
 
     const parsed = cvToValue(resultCV);
-    // expected result: (ok u100) -> returns { value: 100 } in JSON
     return { data: Number(parsed?.value ?? parsed), error: null };
   } catch (err: any) {
     return parseError(err);
@@ -75,44 +81,7 @@ export async function fetchStabilityScore() {
 }
 
 /**
- * Calls `get-raw-feeds` on the risk-oracle contract.
- * @returns {Promise<{ data?: { pyth: number, redstone: number, onchain: number }, error?: { message: string, code: number } }>} The raw feed components.
- * Failure mode: Returns error object if API is down.
- */
-export async function fetchRawFeeds() {
-  try {
-    const [contractAddress, contractName] = CONTRACT_ADDRESSES.riskOracle.split(".");
-    
-    const resultCV = await fetchCallReadOnlyFunction({
-      network,
-      contractAddress,
-      contractName,
-      functionName: "get-raw-feeds",
-      functionArgs: [],
-      senderAddress: contractAddress,
-    });
-
-    const parsed = cvToValue(resultCV);
-    // expected result: (ok { pyth: u1000000, redstone: ... })
-    const tuple = parsed?.value || parsed;
-    return { 
-      data: {
-        pyth: Number(tuple.pyth),
-        redstone: Number(tuple.redstone),
-        onchain: Number(tuple.onchain),
-      },
-      error: null
-    };
-  } catch (err: any) {
-    return parseError(err);
-  }
-}
-
-/**
  * Calls `get-user-balance` on the aegis-vault contract for the specified address.
- * @param address The user's Stacks native address.
- * @returns {Promise<{ data?: number, error?: { message: string, code: number } }>} The specific user's balance.
- * Failure mode: Returns error object if API is down.
  */
 export async function fetchUserBalance(address: string) {
   if (!address) return { data: 0, error: null };
@@ -137,9 +106,6 @@ export async function fetchUserBalance(address: string) {
 
 /**
  * Calls `get-safe-balance` on the safe-vault contract for the specified address.
- * @param address The user's Stacks native address.
- * @returns {Promise<{ data?: number, error?: { message: string, code: number } }>} The specific user's balance located in the safe vault.
- * Failure mode: Returns error object if API is down.
  */
 export async function fetchSafeBalance(address: string) {
   if (!address) return { data: 0, error: null };
@@ -163,28 +129,61 @@ export async function fetchSafeBalance(address: string) {
 }
 
 /**
- * Calls `get-protocol-score` on the risk-oracle contract.
- * @param contractPrincipal The Stacks principal representing the protocol context.
- * @returns {Promise<{ data?: number, error?: { message: string, code: number } }>} The 0-100 individual security score of that protocol.
- * Failure mode: Returns error object if API is down.
+ * Fetches sBTC balance using the account balances API endpoint.
+ * Ensures loading state resolution even on error.
  */
-export async function fetchProtocolScore(contractPrincipal: string) {
-  if (!contractPrincipal) return { data: 50, error: null }; // default
-  try {
-    const [contractAddress, contractName] = CONTRACT_ADDRESSES.riskOracle.split(".");
-    
-    const resultCV = await fetchCallReadOnlyFunction({
-      network,
-      contractAddress,
-      contractName,
-      functionName: "get-protocol-score",
-      functionArgs: [standardPrincipalCV(contractPrincipal)],
-      senderAddress: contractAddress,
-    });
-
-    const parsed = cvToValue(resultCV);
-    return { data: Number(parsed), error: null };
-  } catch (err: any) {
-    return parseError(err);
+export const fetchSbtcBalance = async (address: string): Promise<number> => {
+  if (!address) {
+    console.warn("[Aegis] fetchSbtcBalance: address is empty");
+    return 0;
   }
-}
+
+  try {
+    const url = `${baseUrl}/v2/accounts/${address}/balances`;
+    console.log("[Aegis] sBTC Balance Request:", url);
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      console.error("[Aegis] HTTP error:", res.status, res.statusText);
+      return 0;
+    }
+
+    const data = await res.json();
+    console.log("[Aegis] Full balances response:", JSON.stringify(data, null, 2));
+
+    const fungibleTokens = data?.fungible_tokens ?? {};
+    const allKeys = Object.keys(fungibleTokens);
+    console.log("[Aegis] All fungible token keys:", allKeys);
+
+    // Find the sBTC key — it contains "sbtc-token" somewhere in the key string
+    const sbtcKey = allKeys.find(k =>
+      k.toLowerCase().includes("sbtc-token") ||
+      k.toLowerCase().includes("sbtc")
+    );
+
+    if (!sbtcKey) {
+      console.warn("[Aegis] No sBTC key found in fungible_tokens. Keys present:", allKeys);
+      return 0;
+    }
+
+    console.log("[Aegis] Found sBTC key:", sbtcKey);
+    const rawBalance = fungibleTokens[sbtcKey]?.balance;
+    console.log("[Aegis] Raw balance value:", rawBalance, "type:", typeof rawBalance);
+
+    // Balance is always returned as a string by the Stacks API — parse it safely
+    const parsed = parseInt(String(rawBalance), 10);
+
+    if (isNaN(parsed)) {
+      console.error("[Aegis] Balance parsed as NaN from raw value:", rawBalance);
+      return 0;
+    }
+
+    console.log("[Aegis] Final parsed balance in microunits:", parsed);
+    return parsed;
+
+  } catch (err) {
+    console.error("[Aegis] fetchSbtcBalance threw:", err);
+    return 0;
+  }
+};

@@ -13,11 +13,36 @@ export const toast = (message: string) => {
 };
 
 export const txDeposit = async (amount: number, onSuccess: () => void) => {
-  const address = useWalletStore.getState().address;
-  if (!address) return;
+  console.log("[Aegis] txDeposit START — amount in microunits:", amount);
 
-  const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split('.');
-  const [sbtcAddress, sbtcName] = SBTC_CONTRACT_ADDRESS.split('.');
+  const contractAddress = import.meta.env.VITE_AEGIS_VAULT_CONTRACT?.split(".")[0];
+  const contractName = import.meta.env.VITE_AEGIS_VAULT_CONTRACT?.split(".")[1];
+  const sbtcContract = import.meta.env.VITE_SBTC_CONTRACT;
+
+  console.log("[Aegis] Contract address:", contractAddress);
+  console.log("[Aegis] Contract name:", contractName);
+  console.log("[Aegis] sBTC contract:", sbtcContract);
+
+  if (!contractAddress || contractAddress === "REPLACE_ME" || !contractName) {
+    console.error("[Aegis] ABORT: VITE_AEGIS_VAULT_CONTRACT is not configured.");
+    alert("Contract address not configured. Check .env.testnet and redeploy.");
+    return;
+  }
+
+  if (amount <= 0 || isNaN(amount)) {
+    console.error("[Aegis] ABORT: Invalid amount:", amount);
+    return;
+  }
+
+  const address = useWalletStore.getState().address;
+  if (!address) {
+    console.error("[Aegis] ABORT: No wallet address found in store.");
+    return;
+  }
+
+  console.log("[Aegis] All checks passed — calling openContractCall now");
+
+  const [sbtcAddress, sbtcName] = (sbtcContract || "").split(".");
 
   await openContractCall({
     network,
@@ -29,7 +54,7 @@ export const txDeposit = async (amount: number, onSuccess: () => void) => {
       uintCV(amount)
     ],
     postConditions: [
-      Pc.principal(address).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
+      Pc.principal(address).willSendEq(amount).ft(`${sbtcAddress}.${sbtcName}`, 'sbtc-token')
     ],
     onFinish: () => {
       toast("Deposit submitted. Waiting for confirmation...");
@@ -42,8 +67,8 @@ export const txWithdraw = async (amount: number, onSuccess: () => void) => {
   const address = useWalletStore.getState().address;
   if (!address) return;
 
-  const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split('.');
-  const [sbtcAddress, sbtcName] = SBTC_CONTRACT_ADDRESS.split('.');
+  const [contractAddress, contractName] = (import.meta.env.VITE_AEGIS_VAULT_CONTRACT || "").split('.');
+  const [sbtcAddress, sbtcName] = (import.meta.env.VITE_SBTC_CONTRACT || "").split('.');
 
   await openContractCall({
     network,
@@ -55,7 +80,7 @@ export const txWithdraw = async (amount: number, onSuccess: () => void) => {
       uintCV(amount)
     ],
     postConditions: [
-      Pc.principal(CONTRACT_ADDRESSES.aegisVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
+      Pc.principal(contractAddress).willSendEq(amount).ft(`${sbtcAddress}.${sbtcName}`, 'sbtc-token')
     ],
     onFinish: () => {
       toast("Withdrawal confirmed. sBTC returned to your wallet.");
@@ -69,8 +94,8 @@ export const txSafeWithdraw = async (amount: number, onSuccess: () => void) => {
   const address = useWalletStore.getState().address;
   if (!address) return;
 
-  const [contractAddress, contractName] = CONTRACT_ADDRESSES.safeVault.split('.');
-  const [sbtcAddress, sbtcName] = SBTC_CONTRACT_ADDRESS.split('.');
+  const [contractAddress, contractName] = (import.meta.env.VITE_SAFE_VAULT_CONTRACT || "").split('.');
+  const [sbtcAddress, sbtcName] = (import.meta.env.VITE_SBTC_CONTRACT || "").split('.');
 
   await openContractCall({
     network,
@@ -82,7 +107,7 @@ export const txSafeWithdraw = async (amount: number, onSuccess: () => void) => {
       uintCV(amount)
     ],
     postConditions: [
-      Pc.principal(CONTRACT_ADDRESSES.safeVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
+      Pc.principal(contractAddress).willSendEq(amount).ft(`${sbtcAddress}.${sbtcName}`, 'sbtc-token')
     ],
     onFinish: () => {
       toast("Safe vault withdrawal confirmed.");
@@ -101,9 +126,9 @@ export const txReEnterProtection = async (amount: number, isBreakerActive: boole
   const address = useWalletStore.getState().address;
   if (!address) return;
 
-  const [contractAddress, contractName] = CONTRACT_ADDRESSES.safeVault.split('.');
-  const [sbtcAddress, sbtcName] = SBTC_CONTRACT_ADDRESS.split('.');
-  const [aegisAddress, aegisName] = CONTRACT_ADDRESSES.aegisVault.split('.');
+  const [contractAddress, contractName] = (import.meta.env.VITE_SAFE_VAULT_CONTRACT || "").split('.');
+  const [sbtcAddress, sbtcName] = (import.meta.env.VITE_SBTC_CONTRACT || "").split('.');
+  const [aegisAddress, aegisName] = (import.meta.env.VITE_AEGIS_VAULT_CONTRACT || "").split('.');
 
   await openContractCall({
     network,
@@ -115,7 +140,7 @@ export const txReEnterProtection = async (amount: number, isBreakerActive: boole
       contractPrincipalCV(aegisAddress, aegisName)
     ],
     postConditions: [
-      Pc.principal(CONTRACT_ADDRESSES.safeVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
+      Pc.principal(contractAddress).willSendEq(amount).ft(`${sbtcAddress}.${sbtcName}`, 'sbtc-token')
     ],
     onFinish: () => {
       toast("Re-entered protection. Funds are back under Aegis guard.");

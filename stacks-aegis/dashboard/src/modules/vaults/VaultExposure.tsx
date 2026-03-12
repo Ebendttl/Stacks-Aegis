@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Input } from "../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { VaultData } from "../../hooks/useVaultData"
 import { useWalletStore } from "../dashboard/WalletConnect"
-import { txDeposit, txWithdraw, txSafeWithdraw, txReEnterProtection, toast } from "../../lib/transactions"
+import { txDeposit, txWithdraw, txSafeWithdraw, txReEnterProtection } from "../../lib/transactions"
+import { microToSbtc, sbtcToMicro } from "../../lib/utils"
 import { Loader2, ShieldAlert, ShieldCheck, Wallet } from "lucide-react"
 
 type Strategy = 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE';
@@ -33,25 +33,47 @@ export function VaultExposure({ data }: { data: VaultData }) {
       return;
     }
 
-    const microUnits = Math.floor(numAmount * 100000000); // 8 decimals for sBTC
+    const microUnits = sbtcToMicro(numAmount);
     if (microUnits > data.userSbtcBalance) {
-      const max = (data.userSbtcBalance / 100000000).toFixed(8);
-      setError(`Amount must be between 0.000001 and ${max} sBTC`);
+      setError(`Amount must be between 0.00000001 sBTC and ${microToSbtc(data.userSbtcBalance)} sBTC`);
       return;
     }
 
     setIsPending(true);
     try {
+      console.log("[Aegis] handleDeposit triggered with amount:", amount);
+      const microUnits = sbtcToMicro(amount);
       await txDeposit(microUnits, () => {
         setIsPending(false);
         setAmount('');
         data.refetch();
       });
     } catch (e) {
-      console.error(e);
+      console.error("[Aegis] handleDeposit failed:", e);
       setIsPending(false);
     }
   };
+
+  // FIX 3 — Add a fallback display for the "loading stuck" edge case
+  // Local state for force-resolving loading if hook hangs
+  const [isForcedResolved, setIsForcedResolved] = useState(false);
+  const isLoading = data.isBalanceLoading && !isForcedResolved;
+
+  useEffect(() => {
+    if (!data.isBalanceLoading) {
+      setIsForcedResolved(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      if (data.isBalanceLoading) {
+        console.warn("[Aegis] Balance fetch timed out after 10 seconds");
+        setIsForcedResolved(true);
+      }
+    }, 10000); // 10 second maximum wait
+
+    return () => clearTimeout(timeout);
+  }, [data.isBalanceLoading]);
 
   if (!isConnected) {
     return (
@@ -80,19 +102,48 @@ export function VaultExposure({ data }: { data: VaultData }) {
         <CardContent className="p-6 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="font-mono text-[10px] font-black text-[#f5a623] uppercase tracking-[2px]">Deposit Amount</label>
+              <label 
+                htmlFor="deposit-amount"
+                className="font-mono text-[10px] font-black text-[#f5a623] uppercase tracking-[2px]"
+              >
+                Deposit Amount (sBTC)
+              </label>
               <div className="relative">
                 <Input 
+                  id="deposit-amount"
                   type="number" 
-                  placeholder="0.001"
+                  placeholder="0.00000001" 
+                  min="0.00000001"
+                  max={data.userSbtcBalance > 0 ? microToSbtc(data.userSbtcBalance) : undefined}
+                  step="0.00000001"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="bg-white border-2 border-black rounded-none font-mono font-bold text-black h-12 focus-visible:ring-0 focus-visible:border-[#f5a623]"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+                  className="h-14 bg-[#1a1a1a] border-2 border-[#f5a623] text-white rounded-none font-mono text-lg focus-visible:ring-0 focus-visible:border-black focus-visible:ring-offset-0 transition-all placeholder:text-gray-700"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-black text-black">sBTC</div>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <p className="font-mono text-[10px] text-gray-400">
+                    Available: {
+                      isLoading
+                        ? "loading..."
+                        : data.userSbtcBalance > 0
+                          ? `${microToSbtc(data.userSbtcBalance)} sBTC`
+                          : "0.00000000 sBTC ⚠ check wallet network"
+                    }
+                  </p>
+                </div>
               </div>
-              {error && <p className="font-mono text-[10px] font-bold text-[#ff3030]">{error}</p>}
-              <p className="font-mono text-[10px] text-gray-400">Available: {(data.userSbtcBalance / 100000000).toFixed(8)} sBTC</p>
+              {(() => {
+                const minSbtc = "0.00000001";
+                const maxSbtc = data.userSbtcBalance > 0 ? microToSbtc(data.userSbtcBalance) : null;
+                return error ? (
+                  <p className="text-[#ff4d4d] text-[10px] font-bold uppercase mono">
+                    {maxSbtc 
+                      ? `AMOUNT MUST BE BETWEEN ${minSbtc} SBTC AND ${maxSbtc} SBTC`
+                      : `ENTER AN AMOUNT GREATER THAN ${minSbtc} SBTC`
+                    }
+                  </p>
+                ) : null;
+              })()}
             </div>
 
             <div className="space-y-2">
@@ -100,6 +151,7 @@ export function VaultExposure({ data }: { data: VaultData }) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {(Object.keys(STRATEGIES) as Strategy[]).map((key) => (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => setStrategy(key)}
                     className={`p-4 border-2 text-left transition-all duration-200 group ${
@@ -120,6 +172,7 @@ export function VaultExposure({ data }: { data: VaultData }) {
             </div>
 
             <Button 
+              type="button"
               className="w-full h-14 bg-black border-2 border-[#f5a623] text-[#f5a623] hover:bg-[#f5a623] hover:text-black rounded-none font-mono font-black text-lg tracking-[4px] shadow-[4px_4px_0px_rgba(245,166,35,0.2)] disabled:opacity-50 transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               onClick={handleDeposit}
               disabled={isPending || !amount}
