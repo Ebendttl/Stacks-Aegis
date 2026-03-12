@@ -37,11 +37,11 @@ All core protocols are fully verified and deployed on the Stacks Testnet.
 
 | Component | Contract Address | Explorer Link |
 | :--- | :--- | :--- |
-| **Aegis Traits** | `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.aegis-traits` | [View on Hiro Explorer](https://explorer.hiro.so/txid/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.aegis-traits?chain=testnet) |
-| **Risk Oracle** | `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.risk-oracle` | [View on Hiro Explorer](https://explorer.hiro.so/txid/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.risk-oracle?chain=testnet) |
-| **Safe Vault** | `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.safe-vault` | [View on Hiro Explorer](https://explorer.hiro.so/txid/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.safe-vault?chain=testnet) |
-| **Aegis Vault** | `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.aegis-vault` | [View on Hiro Explorer](https://explorer.hiro.so/txid/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.aegis-vault?chain=testnet) |
-| **SIP-010 Mock** | `ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-sbtc` | [View on Hiro Explorer](https://explorer.hiro.so/txid/ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-sbtc?chain=testnet) |
+| **Aegis Traits** | `STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.aegis-traits` | [View on Hiro Explorer](https://explorer.hiro.so/txid/STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.aegis-traits?chain=testnet) |
+| **Risk Oracle** | `STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.risk-oracle` | [View on Hiro Explorer](https://explorer.hiro.so/txid/STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.risk-oracle?chain=testnet) |
+| **Safe Vault** | `STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.safe-vault` | [View on Hiro Explorer](https://explorer.hiro.so/txid/STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.safe-vault?chain=testnet) |
+| **Aegis Vault** | `STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.aegis-vault` | [View on Hiro Explorer](https://explorer.hiro.so/txid/STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.aegis-vault?chain=testnet) |
+| **SIP-010 Mock** | `STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.mock-sbtc` | [View on Hiro Explorer](https://explorer.hiro.so/txid/STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.mock-sbtc?chain=testnet) |
 
 ## Security Model
 A full breakdown of the Threat Model, architectural limitations, mitigation strategies, and formal mainnet launch prerequisites can be found in our [Security Model Documentation](grant-submission/SECURITY_MODEL.md).

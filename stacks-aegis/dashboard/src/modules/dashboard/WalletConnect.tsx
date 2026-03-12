@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { showConnect } from '@stacks/connect';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';

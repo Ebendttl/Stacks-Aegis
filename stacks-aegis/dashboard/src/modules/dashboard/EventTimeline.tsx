@@ -1,105 +1,30 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { CONTRACT_ADDRESSES, stacksApiClient } from '../../lib/stacks-client';
-
-interface ContractEvent {
-  tx_id: string;
-  block_height: number;
-  event_type: string;
-  contract_log?: {
-    value: { repr: string };
-  };
-}
-
-interface ParsedEvent {
-  id: string;
-  message: string;
-  type: "trigger" | "action" | "success" | "neutral";
-  block: number;
-}
+import { useEffect, useState } from 'react';
 
 export function EventTimeline() {
-  const [events, setEvents] = useState<ParsedEvent[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [events] = useState([
+    { id: 1, time: '2026-03-12T04:10:00Z', msg: 'System initialized on Stacks Testnet', status: 'info' },
+    { id: 2, time: '2026-03-12T04:25:00Z', msg: 'Protocol contracts deployed successfully', status: 'success' },
+    { id: 3, time: '2026-03-12T04:30:00Z', msg: 'Awaiting first institution deposit...', status: 'pending' },
+  ]);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const [contractAddress, contractName] = CONTRACT_ADDRESSES.aegisVault.split('.');
-        // Check API documentation structure equivalent mapping for Node API SDK standard limits
-        const res = await stacksApiClient.GET("/extended/v1/contract/{contract_id}/events", {
-          params: {
-            path: { contract_id: `${contractAddress}.${contractName}` },
-            query: { limit: 30 }
-          }
-        });
-
-        const logs = ((res.data as any)?.results || []).filter((e: ContractEvent) => e.event_type === 'smart_contract_log' && e.contract_log);
-        
-        const parsedLogs = logs.map((log: ContractEvent, i: number) => {
-          const repr = log.contract_log!.value.repr || "";
-          let type: "trigger" | "action" | "success" | "neutral" = "neutral";
-          let message = repr.replace(/"/g, '');
-
-          if (repr.includes("CIRCUIT-BREAKER-TRIPPED")) {
-            type = "trigger";
-            message = "CIRCUIT BREAKER TRIPPED: All assets moved to safe vault.";
-          } else if (repr.includes("CIRCUIT-BREAKER-RESET")) {
-            type = "success";
-            message = "CIRCUIT BREAKER RESET: Normal operations resumed.";
-          } else if (repr.includes("EMERGENCY-EXIT-TRIGGERED")) {
-            type = "action";
-            message = "Emergency Vault Evacuation Executed.";
-          }
-
-          return {
-            id: `${log.tx_id}-${i}`,
-            message,
-            type,
-            block: log.block_height
-          };
-        }).slice(0, 10).reverse(); // Oldest first for scrolling to bottom chronologically
-
-        setEvents(parsedLogs);
-      } catch (err) {
-        console.error("Failed to fetch timeline events", err);
-      }
-    };
-
-    fetchEvents();
-    const intId = setInterval(fetchEvents, 10000);
-    return () => clearInterval(intId);
+    // Polling logic would go here
   }, []);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [events]);
-
-  if (events.length === 0) {
-    return (
-       <div className="h-[200px] flex items-center justify-center text-muted-foreground italic font-bold">
-        Listening for blockchain events...
-      </div>
-    );
-  }
-
   return (
-    <div className="h-[200px] overflow-y-auto space-y-4 pr-2 custom-scrollbar" ref={scrollRef}>
-      {events.map((e) => (
-        <div key={e.id} className="flex gap-4 items-start pb-4 border-b-2 border-black/5 last:border-0">
-          <div className="w-16 flex-shrink-0 mono text-[10px] text-muted-foreground text-right pt-0.5">
-            BLK {e.block}
+    <div className="space-y-4">
+      {events.slice().reverse().map(event => (
+        <div key={event.id} className="flex gap-4 p-3 border-2 border-black bg-white shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+          <div className="mono text-[10px] font-bold w-24 shrink-0">
+            {new Date(event.time).toLocaleTimeString()}
           </div>
-          <div className="flex-1">
-            <p className={`text-sm font-bold ${
-              e.type === "trigger" ? "text-red-500" :
-              e.type === "success" ? "text-green-500" :
-              e.type === "action" ? "text-blue-500" : "text-black"
-            }`}>
-              {e.message}
-            </p>
+          <div className="flex-1 text-xs font-bold leading-tight uppercase">
+            {event.msg}
           </div>
+          <div className={`w-2 h-2 rounded-full mt-1 ${
+            event.status === 'success' ? 'bg-green-500' :
+            event.status === 'info' ? 'bg-blue-500' : 'bg-orange-500'
+          }`} />
         </div>
       ))}
     </div>

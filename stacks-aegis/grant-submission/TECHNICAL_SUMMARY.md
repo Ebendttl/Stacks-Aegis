@@ -26,11 +26,11 @@ Stacks Aegis leverages a decoupled "Sense-Think-Act" architecture enforced acros
 
 The protocol is fully deployed and functionally tested against the Stacks testnet. The following transactions demonstrate the complete End-to-End algorithmic lifecycle of a user passing through normal operations, emergency incident response, and algorithmic recovery.
 
-*   `TX-SCENARIO-1` (Deposit): 0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b
-*   `TX-SCENARIO-2` (Circuit Tripped): 0xd3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2
-*   `TX-SCENARIO-3` (Emergency Exit): 0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b
-*   `TX-SCENARIO-4` (Safe Withdraw): 0xf5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4
-*   `TX-SCENARIO-5` (Network Re-entry): 0x8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a
+*   `TX-SCENARIO-1` (Deposit): 7e2b5823797d6083badace1932f0664a682922bf3d689530a60aa7772d08da5c
+*   `TX-SCENARIO-2` (Circuit Tripped): 7a9aff613fd1f01eb96b3230e4b49b329296df5cd59b5cb5882a1d87a8bff4bb
+*   `TX-SCENARIO-3` (Emergency Exit): d77666163e03d72e980ff3410191cf264cf70c42e13d7b95ce1cda3772041910
+*   `TX-SCENARIO-4` (Safe Withdraw): c15e2846228dfd28280160e057858bc826d0b2e0607382a3bbe5fbd123c78b17
+*   `TX-SCENARIO-5` (Network Re-entry): bf97770c646790344212a9a22dc2c53cbbf97f2e4f885683a80136ddca3d0649
 
 ## Milestones and Funding Request
 

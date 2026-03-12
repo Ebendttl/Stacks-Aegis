@@ -33,7 +33,7 @@ done
 
 # This is non-negotiable. Never deploy without passing tests.
 echo "Running full test suite before deployment..."
-clarinet test --coverage
+npm test
 if [ $? -ne 0 ]; then
   echo "ERROR: Tests failed. Deployment aborted. Fix all test failures before deploying to testnet."
   exit 1
@@ -42,16 +42,16 @@ fi
 echo "Starting Deployment to Testnet..."
 
 # Execute the deployment plan strictly based on Clarinet.toml order
-clarinet deployments apply --testnet --manifest Clarinet.toml
+clarinet deployments apply --testnet --manifest-path Clarinet.toml
 
 echo "Deployment submitted. Verifying contract interfaces on testnet..."
 echo "NOTE: Replace {DEPLOYER_ADDRESS} with your actual deployer address."
 
-DEPLOYER="ST_YOUR_DEPLOYER_ADDRESS" # Optional: prompt or configure this
+DEPLOYER="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
 
 # Verify aegis-traits
 echo "Verifying aegis-traits..."
-if curl -s -f "https://stacks-node-api.testnet.stacks.co/v2/contracts/interface/{DEPLOYER_ADDRESS}.aegis-traits" > /dev/null; then
+if curl -s -f "https://api.testnet.hiro.so/v2/contracts/interface/$DEPLOYER.aegis-traits" > /dev/null; then
   echo "SUCCESS: aegis-traits interface verified."
 else
   echo "FAILURE or PENDING: aegis-traits not yet reporting interface."
@@ -59,7 +59,7 @@ fi
 
 # Verify risk-oracle
 echo "Verifying risk-oracle..."
-if curl -s -f "https://stacks-node-api.testnet.stacks.co/v2/contracts/interface/{DEPLOYER_ADDRESS}.risk-oracle" > /dev/null; then
+if curl -s -f "https://api.testnet.hiro.so/v2/contracts/interface/$DEPLOYER.risk-oracle" > /dev/null; then
   echo "SUCCESS: risk-oracle interface verified."
 else
   echo "FAILURE or PENDING: risk-oracle not yet reporting interface."
@@ -67,7 +67,7 @@ fi
 
 # Verify safe-vault
 echo "Verifying safe-vault..."
-if curl -s -f "https://stacks-node-api.testnet.stacks.co/v2/contracts/interface/{DEPLOYER_ADDRESS}.safe-vault" > /dev/null; then
+if curl -s -f "https://api.testnet.hiro.so/v2/contracts/interface/$DEPLOYER.safe-vault" > /dev/null; then
   echo "SUCCESS: safe-vault interface verified."
 else
   echo "FAILURE or PENDING: safe-vault not yet reporting interface."
@@ -75,7 +75,7 @@ fi
 
 # Verify aegis-vault
 echo "Verifying aegis-vault..."
-if curl -s -f "https://stacks-node-api.testnet.stacks.co/v2/contracts/interface/{DEPLOYER_ADDRESS}.aegis-vault" > /dev/null; then
+if curl -s -f "https://api.testnet.hiro.so/v2/contracts/interface/$DEPLOYER.aegis-vault" > /dev/null; then
   echo "SUCCESS: aegis-vault interface verified."
 else
   echo "FAILURE or PENDING: aegis-vault not yet reporting interface."
@@ -84,9 +84,9 @@ fi
 echo "=================================="
 echo "Deployment Process Complete."
 echo "Deployed Contracts:"
-echo "- {DEPLOYER_ADDRESS}.aegis-traits"
-echo "- {DEPLOYER_ADDRESS}.risk-oracle"
-echo "- {DEPLOYER_ADDRESS}.safe-vault"
-echo "- {DEPLOYER_ADDRESS}.aegis-vault"
+echo "- $DEPLOYER.aegis-traits"
+echo "- $DEPLOYER.risk-oracle"
+echo "- $DEPLOYER.safe-vault"
+echo "- $DEPLOYER.aegis-vault"
 echo "Current Testnet Block Height: $(curl -s https://stacks-node-api.testnet.stacks.co/v2/info | grep -o '"stacks_tip_height":[0-9]*' | cut -d ':' -f 2)"
 echo "Next step: Run scripts/seed-testnet.sh to fund test wallets and execute initial deposits."

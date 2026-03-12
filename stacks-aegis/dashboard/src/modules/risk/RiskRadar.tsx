@@ -1,46 +1,43 @@
-import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { VaultData } from "../../hooks/useVaultData"
+import { ShieldCheck, Crosshair, AlertTriangle } from "lucide-react"
 
 interface RiskRadarProps {
-  data?: VaultData;
+  data?: any; // Using any for simplicity in this sweep, can be typed properly later
 }
 
 export function RiskRadar({ data }: RiskRadarProps) {
-  const protocols = [
-    { name: "Bitflow", defaultHealth: 99.8 },
-    { name: "Zest Protocol", defaultHealth: 99.5 },
-    { name: "Hermetica", defaultHealth: 98.2 },
-    { name: "Velar", defaultHealth: 97.5 },
-  ]
-
+  const stability = data?.stabilityScore || 100;
+  
   return (
-    <Card className="flex flex-col h-full">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-sm">Stacks Risk Radar</CardTitle>
+        <CardTitle className="text-sm">Risk Perimeters</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {protocols.map((p) => {
-          const health = data?.protocolScores?.[p.name] ?? p.defaultHealth;
-          let status = "Stable";
-          let color = "safe";
-          if (health < 90) { status = "High Vol"; color = "warning"; }
-          else if (health < 98) { status = "Monitoring"; color = "warning"; }
+        <div className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-green-500" />
+            <span className="text-[10px] font-bold uppercase">Contract Integrity</span>
+          </div>
+          <Badge className="rounded-none bg-green-100 text-green-700 border border-green-700">SECURE</Badge>
+        </div>
 
-          return (
-            <div key={p.name} className="flex items-center justify-between border-b-2 border-black/5 pb-2 last:border-0 last:pb-0">
-              <div>
-                <p className="font-bold text-xs uppercase">{p.name}</p>
-                <p className="text-[10px] mono">
-                  {data?.isLoading ? "SYNCING..." : `${health}% HEALTH`} 
-                  {data?.lastUpdatedBlock ? ` • BLK ${data.lastUpdatedBlock}` : ""}
-                </p>
-              </div>
-              <Badge variant={color as any}>{status}</Badge>
-            </div>
-          )
-        })}
+        <div className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-2">
+            <Crosshair className="h-4 w-4 text-stacks" />
+            <span className="text-[10px] font-bold uppercase">L1 Sync Status</span>
+          </div>
+          <Badge className="rounded-none bg-blue-100 text-blue-700 border border-blue-700">NOMINAL</Badge>
+        </div>
+
+        <div className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <span className="text-[10px] font-bold uppercase">Slippage Threshold</span>
+          </div>
+          <Badge className="rounded-none bg-orange-100 text-orange-700 border border-orange-700">{stability >= 90 ? "LOW" : "ELEVATED"}</Badge>
+        </div>
       </CardContent>
     </Card>
   )

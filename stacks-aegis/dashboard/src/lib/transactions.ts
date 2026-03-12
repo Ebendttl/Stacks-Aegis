@@ -31,7 +31,7 @@ export const txDeposit = async (amount: number, onSuccess: () => void) => {
     postConditions: [
       Pc.principal(address).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
     ],
-    onFinish: (data) => {
+    onFinish: () => {
       toast("Deposit submitted. Waiting for confirmation...");
       onSuccess();
     }
@@ -57,7 +57,7 @@ export const txWithdraw = async (amount: number, onSuccess: () => void) => {
     postConditions: [
       Pc.principal(CONTRACT_ADDRESSES.aegisVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
     ],
-    onFinish: (data) => {
+    onFinish: () => {
       toast("Withdrawal confirmed. sBTC returned to your wallet.");
       onSuccess();
     }
@@ -84,7 +84,7 @@ export const txSafeWithdraw = async (amount: number, onSuccess: () => void) => {
     postConditions: [
       Pc.principal(CONTRACT_ADDRESSES.safeVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
     ],
-    onFinish: (data) => {
+    onFinish: () => {
       toast("Safe vault withdrawal confirmed.");
       onSuccess();
     }
@@ -117,7 +117,7 @@ export const txReEnterProtection = async (amount: number, isBreakerActive: boole
     postConditions: [
       Pc.principal(CONTRACT_ADDRESSES.safeVault).willSendEq(amount).ft(SBTC_CONTRACT_ADDRESS, 'mock-sbtc')
     ],
-    onFinish: (data) => {
+    onFinish: () => {
       toast("Re-entered protection. Funds are back under Aegis guard.");
       onSuccess();
     }

@@ -1,29 +1,37 @@
-import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Shield } from "lucide-react"
 
 interface StabilityScoreProps {
-  score: number
+  score: number;
 }
 
 export function StabilityScoreGauge({ score }: StabilityScoreProps) {
-  const getScoreColor = (s: number) => {
-    if (s > 90) return "text-safe"
-    if (s > 70) return "text-warning"
-    return "text-panic"
-  }
-
+  // Simple representation
   return (
-    <Card className="h-full">
+    <Card className="relative overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm">Stability Score</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center pt-0">
-        <div className={`text-6xl font-black transition-colors ${getScoreColor(score)}`}>
-          {score}%
+      <CardContent>
+        <div className="flex items-end gap-2">
+          <span className="text-6xl font-black">{score}</span>
+          <span className="text-xl font-bold mb-2">/100</span>
         </div>
-        <p className="text-[10px] mono mt-2 font-bold uppercase tracking-widest text-muted-foreground">
-          Current Risk Index: {score > 90 ? "NOMINAL" : score > 70 ? "ELEVATED" : "CRITICAL"}
-        </p>
+        <div className="w-full h-4 border-2 border-black mt-4 bg-gray-100">
+           <div 
+            className="h-full bg-stacks transition-all duration-1000" 
+            style={{ width: `${score}%` }}
+           />
+        </div>
+        <div className="mt-4 flex items-center justify-between text-[10px] font-bold">
+           <div className="flex items-center gap-1">
+             <Shield className="h-3 w-3" />
+             ALGORITHMIC HEALTH
+           </div>
+           <span className={score > 90 ? "text-green-600" : "text-stacks"}>
+             {score > 90 ? "OPTIMAL" : "STABLE"}
+           </span>
+        </div>
       </CardContent>
     </Card>
   )

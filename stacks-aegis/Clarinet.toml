@@ -6,26 +6,26 @@ telemetry = false
 cache_dir = './.cache'
 requirements = []
 [contracts.aegis-traits]
-path = 'contracts/aegis-traits.clar'
+path = "./contracts/aegis-traits.clar"
 clarity_version = 2
 epoch = 2.5
 
 [contracts.aegis-vault]
-path = 'contracts/aegis-vault.clar'
+path = "./contracts/aegis-vault.clar"
 clarity_version = 2
 epoch = 2.5
 
 [contracts.risk-oracle]
-path = 'contracts/risk-oracle.clar'
+path = "./contracts/risk-oracle.clar"
 clarity_version = 2
 epoch = 2.5
 
 [contracts.safe-vault]
-path = 'contracts/safe-vault.clar'
+path = "./contracts/safe-vault.clar"
 clarity_version = 2
 epoch = 2.5
 [contracts.mock-sbtc]
-path = 'contracts/mock-sbtc.clar'
+path = "./contracts/mock-sbtc.clar"
 clarity_version = 2
 epoch = 2.5
 

@@ -1,10 +1,9 @@
-import React, { useState } from "react"
-import { Shield, Activity, Zap, RefreshCw } from "lucide-react"
+import { useEffect, useState } from 'react';
+import { Activity } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RiskRadar } from "../risk/RiskRadar"
 import { StabilityScoreGauge } from "../risk/StabilityScoreGauge"
 import { VaultExposure } from "../vaults/VaultExposure"
@@ -14,7 +13,7 @@ import { useVaultData } from "../../hooks/useVaultData"
 import { openContractCall } from "@stacks/connect"
 import { uintCV } from "@stacks/transactions"
 import { network, CONTRACT_ADDRESSES } from "../../lib/stacks-client"
-import { toast, txReEnterProtection, txWithdraw } from "../../lib/transactions"
+import { toast, txWithdraw } from "../../lib/transactions"
 
 export function MissionControl() {
   const { isConnected } = useWalletStore()
@@ -23,7 +22,7 @@ export function MissionControl() {
   const [threshold, setThreshold] = useState([vaultData.threshold || 95])
   
   // Update local slider when blockchain syncs
-  React.useEffect(() => {
+  useEffect(() => {
     if (vaultData.threshold) setThreshold([vaultData.threshold])
   }, [vaultData.threshold])
 
@@ -71,7 +70,7 @@ export function MissionControl() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase">Threshold: &lt; 0.{threshold[0]}</label>
+                  <label className="text-[10px] font-black uppercase">Threshold: {"<"} 0.{threshold[0]}</label>
                   <span className="mono text-[10px] font-bold">BALANCED</span>
                 </div>
                 {vaultData.isLoading ? (
