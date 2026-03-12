@@ -8,6 +8,7 @@ export interface VaultData {
   totalTvl: number;
   userVaultBalance: number;
   userSafeBalance: number;
+  userSbtcBalance: number;
   threshold: number;
   lastUpdatedBlock: number;
   isLoading: boolean;
@@ -22,6 +23,7 @@ export function useVaultData(): VaultData {
     totalTvl: 0,
     userVaultBalance: 0,
     userSafeBalance: 0,
+    userSbtcBalance: 0,
     threshold: 95,
     lastUpdatedBlock: 0,
     isLoading: true,
@@ -44,6 +46,8 @@ export function useVaultData(): VaultData {
       } catch (e) {
         console.warn("User session error", e);
       }
+
+      const [sbtcAddr, sbtcName] = (import.meta.env.VITE_SBTC_CONTRACT || "STNHKEPYEPJ8ET55ZZ0M5A34J0R3N5FM2CMMMAZ6.mock-sbtc").split('.');
 
       // 1. Fetch Oracle Stability
       const oracleRes = await fetchCallReadOnlyFunction({
@@ -75,6 +79,7 @@ export function useVaultData(): VaultData {
       // 3. Fetch Balances if connected
       let userBal = 0;
       let safeBal = 0;
+      let sbtcBal = 0;
       let userThreshold = globalThreshold;
 
       if (userAddress) {
@@ -108,6 +113,17 @@ export function useVaultData(): VaultData {
              senderAddress: userAddress,
            });
            safeBal = Number(cvToJSON(safeRes).value.value);
+
+           // Fetch sBTC Balance
+           const sbtcRes = await fetchCallReadOnlyFunction({
+             network,
+             contractAddress: sbtcAddr,
+             contractName: sbtcName,
+             functionName: 'get-balance',
+             functionArgs: [uintCV(userAddress)],
+             senderAddress: userAddress,
+           });
+           sbtcBal = Number(cvToJSON(sbtcRes).value.value);
          } catch (e) {
            console.error("Partial fetch error", e);
          }
@@ -122,6 +138,7 @@ export function useVaultData(): VaultData {
         totalTvl: totalTvl || 0, 
         userVaultBalance: userBal,
         userSafeBalance: safeBal,
+        userSbtcBalance: sbtcBal,
         threshold: userThreshold,
         lastUpdatedBlock: info?.stacks_tip_height || 0,
         isLoading: false,
