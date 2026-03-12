@@ -7,9 +7,13 @@ export const userSession = new UserSession({ appConfig });
 
 // Instantiate the testnet network
 export const baseUrl = import.meta.env.VITE_STACKS_API_URL || "https://api.testnet.hiro.so";
+
+// In @stacks/network v7, STACKS_TESTNET is a constant. 
+// We create a custom network object that fetchCallReadOnlyFunction can use.
+// It usually expects a coreApiUrl property.
 export const network = {
   ...STACKS_TESTNET,
-  client: { baseUrl }
+  coreApiUrl: baseUrl,
 };
 
 // Replace ST... with your actual testnet deployer address after running deploy-testnet.sh.

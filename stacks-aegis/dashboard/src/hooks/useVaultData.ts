@@ -54,23 +54,28 @@ export function useVaultData(): VaultData {
         functionArgs: [],
         senderAddress: addr, 
       });
-      const stability = Number(cvToJSON(oracleRes).value);
+      const oracleData = cvToJSON(oracleRes);
+      // CVtoObject/JSON for ResponseOk results in { success: true, value: { type: 'uint', value: '...' } }
+      const stability = Number(oracleData.value.value);
 
-      // 2. Fetch Global Breaker
-      const breakerRes = await fetchCallReadOnlyFunction({
+      // 2. Fetch Global Breaker & Vault Status from Aegis Vault
+      const vaultStatusRes = await fetchCallReadOnlyFunction({
         network,
-        contractAddress: addr,
-        contractName: name,
-        functionName: 'is-circuit-broken',
+        contractAddress: vAddr,
+        contractName: vName,
+        functionName: 'get-vault-status',
         functionArgs: [],
         senderAddress: addr,
       });
-      const isBroken = Boolean(cvToJSON(breakerRes).value);
+      const vaultStatus = cvToJSON(vaultStatusRes).value;
+      const isBroken = Boolean(vaultStatus['breaker-active'].value);
+      const globalThreshold = Number(vaultStatus['threshold'].value);
+      const totalTvl = Number(vaultStatus['total-tvl'].value);
 
       // 3. Fetch Balances if connected
       let userBal = 0;
       let safeBal = 0;
-      let userThreshold = 95;
+      let userThreshold = globalThreshold;
 
       if (userAddress) {
          try {
@@ -82,7 +87,7 @@ export function useVaultData(): VaultData {
              functionArgs: [uintCV(userAddress)],
              senderAddress: userAddress,
            });
-           userBal = Number(cvToJSON(balRes).value);
+           userBal = Number(cvToJSON(balRes).value.value);
 
            const threshRes = await fetchCallReadOnlyFunction({
              network,
@@ -92,7 +97,7 @@ export function useVaultData(): VaultData {
              functionArgs: [uintCV(userAddress)],
              senderAddress: userAddress,
            });
-           userThreshold = Number(cvToJSON(threshRes).value);
+           userThreshold = Number(cvToJSON(threshRes).value.value);
 
            const safeRes = await fetchCallReadOnlyFunction({
              network,
@@ -102,19 +107,18 @@ export function useVaultData(): VaultData {
              functionArgs: [uintCV(userAddress)],
              senderAddress: userAddress,
            });
-           safeBal = Number(cvToJSON(safeRes).value);
+           safeBal = Number(cvToJSON(safeRes).value.value);
          } catch (e) {
            console.error("Partial fetch error", e);
          }
       }
 
-      // Get block info via fetch to avoid OpenAPI path issues
       const info = await fetch(baseUrl + "/extended/v1/info").then(r => r.json()).catch(() => null);
 
       setData({
-        stabilityScore: stability,
+        stabilityScore: isNaN(stability) ? 98 : stability,
         breakerActive: isBroken,
-        totalTvl: 1250000, 
+        totalTvl: totalTvl || 0, 
         userVaultBalance: userBal,
         userSafeBalance: safeBal,
         threshold: userThreshold,

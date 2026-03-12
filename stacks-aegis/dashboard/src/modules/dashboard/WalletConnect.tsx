@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { showConnect } from '@stacks/connect';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';
-import { userSession } from '../../lib/stacks-client'; // We'll export userSession from stacks-client
+import { userSession } from '../../lib/stacks-client';
+
+// Extremely robust import strategy for @stacks/connect
+import * as ConnectModule from '@stacks/connect';
 
 interface WalletStore {
   address: string | null;
@@ -17,23 +19,42 @@ export const useWalletStore = create<WalletStore>((set) => ({
   isConnected: false,
   network: "testnet",
   connect: () => {
-    showConnect({
+    const authOptions = {
       appDetails: {
         name: "Stacks Aegis",
         icon: window.location.origin + "/aegis-logo.png",
       },
-      onFinish: ({ userSession: activeSession }) => {
-        const userData = activeSession.loadUserData();
+      userSession,
+      onFinish: () => {
+        const userData = userSession.loadUserData();
         set({
           isConnected: true,
           address: userData.profile.stxAddress.testnet,
         });
       },
-    });
+    };
+
+    // Helper to find showConnect across various possible export patterns
+    const pkg = ConnectModule as any;
+    const launcher = pkg.showConnect || (pkg.default && pkg.default.showConnect) || (typeof pkg === 'function' ? pkg : null);
+
+    if (typeof launcher === 'function') {
+      try {
+        launcher(authOptions);
+      } catch (e) {
+        console.error("Failed to launch showConnect", e);
+        // Last resort: window injection check
+        if ((window as any).StacksProvider) {
+          alert("Please use the Stacks browser extension to connect.");
+        }
+      }
+    } else {
+      console.error("showConnect not found in @stacks/connect exports:", pkg);
+      // Force reload or fallback if possible
+      alert("Wallet connection module failed to load. Please refresh the page.");
+    }
   },
   disconnect: () => {
-    // We'll manage session state in the component using useConnect but zustand is required.
-    // However, if we're using @stacks/connect Connect provider, we can use useConnect().disconnect();
     set({ isConnected: false, address: null });
   }
 }));
@@ -41,7 +62,6 @@ export const useWalletStore = create<WalletStore>((set) => ({
 export function WalletConnect() {
   const { address, isConnected, connect, disconnect } = useWalletStore();
 
-  // Sync initial state if already connected
   useEffect(() => {
     if (userSession?.isUserSignedIn()) {
       try {
@@ -59,9 +79,7 @@ export function WalletConnect() {
   }, []);
 
   const handleConnect = () => {
-    if (typeof window !== 'undefined') {
-      connect();
-    }
+    connect();
   };
 
   const handleDisconnect = () => {
