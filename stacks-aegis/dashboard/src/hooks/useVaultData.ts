@@ -113,7 +113,8 @@ export function useVaultData(): VaultData {
          }
       }
 
-      const info = await fetch(baseUrl + "/extended/v1/info").then(r => r.json()).catch(() => null);
+      // Get block info via v2/info (the node standard)
+      const info = await fetch(baseUrl + "/v2/info").then(r => r.json()).catch(() => null);
 
       setData({
         stabilityScore: isNaN(stability) ? 98 : stability,
