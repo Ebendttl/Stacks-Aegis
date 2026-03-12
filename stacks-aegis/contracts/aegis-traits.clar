@@ -29,23 +29,24 @@
 )
 
 ;; @desc Protected Vault Trait
-;; Interface for vaults that can be protected by the Aegis circuit breaker.
+;; Interface for vaults managed by the Aegis circuit breaker.
+;; NOTE on Clarity 2 Trait Limitations: Clarity 2 does not support trait 
+;; references inside trait method signatures. Functions accepting multiple contract 
+;; arguments (token + vault) cannot be expressed here. Those functions are 
+;; implemented directly on the vault contracts as public functions beyond the trait.
 (define-trait protected-vault-trait
   (
-    ;; @desc Deposit sBTC into the vault.
+    ;; @desc Deposit sBTC into the vault. Token contract passed as argument.
     ;; @param amount; The amount of sBTC (uint) to deposit.
-    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
-    (deposit (uint) (response bool uint))
+    ;; @param token; The SIP-010 sBTC token contract.
+    ;; @returns (response bool uint); (ok true) on success, (err uint) on failure.
+    (deposit (uint <sip-010-trait>) (response bool uint))
 
-    ;; @desc Standard withdrawal of sBTC from the vault.
+    ;; @desc Standard withdrawal of sBTC from the vault. Token contract passed as argument.
     ;; @param amount; The amount of sBTC (uint) to withdraw.
-    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
-    (withdraw (uint) (response bool uint))
-
-    ;; @desc Emergency exit mechanism for circuit breaker triggers.
-    ;; @param amount; The amount of sBTC (uint) to be evacuated from the vault.
-    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
-    (emergency-exit (uint) (response bool uint))
+    ;; @param token; The SIP-010 sBTC token contract.
+    ;; @returns (response bool uint); (ok true) on success, (err uint) on failure.
+    (withdraw (uint <sip-010-trait>) (response bool uint))
   )
 )
 
@@ -54,7 +55,19 @@
 (define-trait risk-oracle-trait
   (
     ;; @desc Fetch the current stability score of the sBTC peg.
-    ;; @returns (response uint uint); Returns (ok uint) representing the score, or (err uint) for error propagation.
+    ;; @returns (response uint uint); (ok score) where score is 0-100.
     (get-stability-score () (response uint uint))
+  )
+)
+
+;; @desc Safe Vault Trait
+;; Minimal interface for the Safe Vault, used by aegis-vault to avoid circular dependencies.
+(define-trait safe-vault-trait
+  (
+    ;; @desc Receive emergency funds from the protected vault during a circuit-breaker event.
+    ;; @param user; The original owner of the funds.
+    ;; @param amount; The amount of sBTC being moved.
+    ;; @returns (response bool uint); (ok true) on success.
+    (receive-emergency-funds (principal uint) (response bool uint))
   )
 )

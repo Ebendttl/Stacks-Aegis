@@ -9,25 +9,25 @@
 (define-constant ERR-UNAUTHORIZED (err u101))
 
 ;; Constants
-;; tx-sender at deployment time. 
+;; tx-sender at deployment time.
 ;; In a mainnet production environment, this would be replaced by a DAO governance or multisig principal.
 (define-constant ADMIN tx-sender)
 
-;; Price Feed Constants (simulating Pyth + RedStone + On-Chain)
-;; Values represent sBTC/BTC ratio scaled to 1,000,000
+;; Price Feed Data Variables (simulating Pyth + RedStone + On-Chain)
+;; Using data-vars to allow test simulation of depegs via set-feed.
+;; Values represent sBTC/BTC ratio scaled to 1,000,000.
 
 ;; In production, this would be replaced by a Pyth contract-call.
-(define-constant FEED-PYTH u998500) ;; 0.9985 BTC
+(define-data-var feed-pyth uint u998500)     ;; 0.9985 BTC
 
 ;; In production, this would be replaced by a RedStone contract-call.
-(define-constant FEED-REDSTONE u997800) ;; 0.9978 BTC
+(define-data-var feed-redstone uint u997800) ;; 0.9978 BTC
 
 ;; In production, this would be derived from a mock liquidity depth or another on-chain source.
-(define-constant FEED-ONCHAIN u999100) ;; 0.9991 BTC
+(define-data-var feed-onchain uint u999100)  ;; 0.9991 BTC
 
 ;; Normalization Constants
-(define-constant PEG-MIN u950000) ;; 0.95 BTC = Score 0
-(define-constant PEG-MAX u1000000) ;; 1.00 BTC = Score 100
+(define-constant PEG-MIN u950000)   ;; 0.95 BTC = Score 0
 (define-constant SCORE-DIVISOR u500) ;; (1,000,000 - 950,000) / 100
 
 ;; Data Maps
@@ -41,7 +41,7 @@
 (define-read-only (get-stability-score)
   (let
     (
-      (average (/ (+ FEED-PYTH (+ FEED-REDSTONE FEED-ONCHAIN)) u3))
+      (average (/ (+ (var-get feed-pyth) (+ (var-get feed-redstone) (var-get feed-onchain))) u3))
     )
     (if (< average PEG-MIN)
       (ok u0) ;; Guard against negative results
@@ -54,9 +54,9 @@
 ;; @returns (response { pyth: uint, redstone: uint, onchain: uint } uint).
 (define-read-only (get-raw-feeds)
   (ok {
-    pyth: FEED-PYTH,
-    redstone: FEED-REDSTONE,
-    onchain: FEED-ONCHAIN
+    pyth:     (var-get feed-pyth),
+    redstone: (var-get feed-redstone),
+    onchain:  (var-get feed-onchain)
   })
 )
 
@@ -68,6 +68,18 @@
 )
 
 ;; Public Functions
+
+;; @desc Admin-only: Set individual feed values for testnet simulation and future oracle upgrades.
+;; @post Changes the state of feed-pyth, feed-redstone, or feed-onchain.
+(define-public (set-feeds (pyth uint) (redstone uint) (onchain uint))
+  (begin
+    (asserts! (is-eq tx-sender ADMIN) ERR-UNAUTHORIZED)
+    (var-set feed-pyth pyth)
+    (var-set feed-redstone redstone)
+    (var-set feed-onchain onchain)
+    (ok true)
+  )
+)
 
 ;; @desc Set the safety score for a specific protocol.
 ;; @param protocol; The principal address of the protocol.

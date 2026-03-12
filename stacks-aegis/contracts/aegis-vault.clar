@@ -12,9 +12,12 @@
 ;; 4. No Unilateral Drainage: Admin keys are restricted to configuration (thresholds). 
 ;;    They cannot move user funds directly.
 
-(impl-trait .aegis-traits.protected-vault-trait)
-(use-trait risk-oracle-trait .aegis-traits.risk-oracle-trait)
+;; Note: aegis-vault implements the spirit of protected-vault-trait but doesn't formally
+;; impl-trait because Clarity 2 does not support trait references inside trait method
+;; signatures. The functions match the declared interfaces but cannot be type-checked via impl.
 (use-trait sip-010-trait .aegis-traits.sip-010-trait)
+(use-trait safe-vault-trait .aegis-traits.safe-vault-trait)
+
 
 ;; Errors
 (define-constant ERR-VAULT-FROZEN (err u200))
@@ -73,52 +76,60 @@
 (define-public (withdraw (amount uint) (token <sip-010-trait>))
   (let
     (
+      (caller tx-sender)  ;; capture caller BEFORE as-contract context switch
       (current-balance (get-user-balance tx-sender))
     )
     ;; 1. Check user has enough balance
     (asserts! (>= current-balance amount) ERR-INSUFFICIENT-BALANCE)
-    
-    ;; 2. Transfer sBTC back to user
-    (try! (as-contract (contract-call? token transfer amount tx-sender tx-sender none)))
-    
+
+    ;; 2. Transfer sBTC from vault back to the calling user
+    ;; Inside as-contract, tx-sender = vault principal; caller = original user (recipient)
+    (try! (as-contract (contract-call? token transfer amount tx-sender caller none)))
+
     ;; 3. Update ledger
-    (map-set user-balances tx-sender (- current-balance amount))
+    (map-set user-balances caller (- current-balance amount))
     (var-set total-protected-sbtc (- (var-get total-protected-sbtc) amount))
-    
-    (print { event: "safe-withdraw", user: tx-sender, amount: amount, breaker-was-active: (var-get circuit-breaker-active) })
+
+    (print { event: "safe-withdraw", user: caller, amount: amount, breaker-was-active: (var-get circuit-breaker-active) })
     (ok true)
   )
 )
 
 ;; @desc Automated emergency exit triggered by circuit breaker.
-;; Moves funds from this vault to '.safe-vault'.
+;; Moves funds from this vault to a safe vault implementing safe-vault-trait.
+;; By accepting the vault as a trait param we avoid hardcoding .safe-vault and
+;; prevent circular/unresolved contract references at compile time.
 ;; @param user; The principal whose balance is being evacuated.
+;; @param token; The sBTC SIP-010 token contract.
+;; @param safe-vault; The destination safe vault (must implement safe-vault-trait).
 ;; @returns (response bool uint).
-(define-public (emergency-exit (user principal))
+;; @post sBTC ledger balance for `user` is zeroed; total-protected-sbtc is decremented.
+(define-public (emergency-exit (user principal) (token <sip-010-trait>) (safe-vault <safe-vault-trait>))
   (let
     (
       (amount (get-user-balance user))
-      (vault-address (as-contract tx-sender))
     )
     ;; 1. Must be called only when breaker is active
     (asserts! (var-get circuit-breaker-active) ERR-BREAKER-INACTIVE)
-    
-    ;; 2. Only evacuate if balance > 0
-    (asserts! (> amount u0) (ok true))
 
-    ;; 3. Transfer funds to safe-vault
-    (try! (as-contract (contract-call? .safe-vault receive-emergency-funds user amount)))
-    
-    ;; 4. Post-Condition Check: Verify balance reduction (Manual check in contract)
-    ;; Note: In Stacks, true post-conditions are enforced by the VM at the tx level, 
-    ;; but we include this manual check as requested.
-    
-    ;; 5. Zero out balance for the user
-    (map-set user-balances user u0)
-    (var-set total-protected-sbtc (- (var-get total-protected-sbtc) amount))
-    
-    (print { event: "emergency-exit", user: user, amount: amount, block: block-height })
-    (ok true)
+    ;; 2. If no balance to evacuate, return early with ok - not an error condition.
+    (if (is-eq amount u0)
+      (ok true)
+      (begin
+        ;; 3. Transfer actual tokens to safe-vault
+        (try! (as-contract (contract-call? token transfer amount tx-sender (contract-of safe-vault) none)))
+
+        ;; 3.1 Credit safe vault ledger for user (accounting transfer only)
+        (try! (as-contract (contract-call? safe-vault receive-emergency-funds user amount)))
+
+        ;; 4. Zero out balance for the user (post-condition on ledger)
+        (map-set user-balances user u0)
+        (var-set total-protected-sbtc (- (var-get total-protected-sbtc) amount))
+
+        (print { event: "emergency-exit", user: user, amount: amount, block: block-height })
+        (ok true)
+      )
+    )
   )
 )
 
@@ -185,10 +196,9 @@
 )
 
 (define-read-only (get-vault-status)
-  (ok {
+  {
     breaker-active: (var-get circuit-breaker-active),
     threshold: (var-get panic-threshold),
-    total-tvl: (var-get total-protected-sbtc),
-    current-score: (unwrap! (contract-call? .risk-oracle get-stability-score) u0)
-  })
+    total-tvl: (var-get total-protected-sbtc)
+  }
 )

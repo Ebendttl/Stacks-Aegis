@@ -15,6 +15,7 @@
 ;;      We trust that only the official vault can evacuate funds here.
 
 (use-trait sip-010-trait .aegis-traits.sip-010-trait)
+(use-trait protected-vault-trait .aegis-traits.protected-vault-trait)
 
 ;; Errors
 (define-constant ERR-UNAUTHORIZED (err u300))
@@ -44,21 +45,15 @@
 ;; Only callable by the official Aegis Vault.
 ;; @param user; The original owner of the funds.
 ;; @param amount; The amount moved.
-;; @param token; The sBTC token contract.
-(define-public (receive-emergency-funds (user principal) (amount uint) (token <sip-010-trait>))
+(define-public (receive-emergency-funds (user principal) (amount uint))
   (begin
-    ;; 1. STYRICT AUTH CHECK: First assertion as mandated.
+    ;; 1. STRICT AUTH CHECK: First assertion as mandated.
     (asserts! (is-eq contract-caller AEGIS-VAULT-PRINCIPAL) ERR-UNAUTHORIZED)
-    
+
     ;; 2. Basic validation
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
-    
-    ;; 3. Execute SIP-010 transfer from Aegis Vault to here
-    ;; We use 'as-contract' because the Aegis Vault initiates the call, 
-    ;; but it must pull the funds from its own contract principal.
-    (try! (contract-call? token transfer amount contract-caller (as-contract tx-sender) none))
-    
-    ;; 4. Update Ledger
+
+    ;; 3. Update Ledger (SIP-010 transfer is handled by aegis-vault at its level)
     (let
       (
         (current-balance (default-to u0 (map-get? safe-balances user)))
@@ -66,7 +61,7 @@
       (map-set safe-balances user (+ current-balance amount))
       (var-set total-safe-tvl (+ (var-get total-safe-tvl) amount))
     )
-    
+
     (print { event: "emergency-funds-received", user: user, amount: amount, block: block-height, source: contract-caller })
     (ok true)
   )
@@ -80,52 +75,51 @@
 (define-public (safe-withdraw (amount uint) (token <sip-010-trait>))
   (let
     (
+      (caller tx-sender)
       (current-balance (default-to u0 (map-get? safe-balances tx-sender)))
     )
     ;; 1. Governance Lock Check
     (asserts! (not (var-get vault-locked)) ERR-VAULT-LOCKED)
-    
+
     ;; 2. Balance Check
     (asserts! (>= current-balance amount) ERR-INSUFFICIENT-BALANCE)
-    
+
     ;; 3. Execute Transfer back to user
-    (try! (as-contract (contract-call? token transfer amount tx-sender tx-sender none)))
-    
+    (try! (as-contract (contract-call? token transfer amount tx-sender caller none)))
+
     ;; 4. Update Ledger
     (let
       ((new-balance (- current-balance amount)))
-      (map-set safe-balances tx-sender new-balance)
+      (map-set safe-balances caller new-balance)
       (var-set total-safe-tvl (- (var-get total-safe-tvl) amount))
-      
-      (print { event: "safe-vault-withdrawal", user: tx-sender, amount: amount, remaining-balance: new-balance, block: block-height })
+
+      (print { event: "safe-vault-withdrawal", user: caller, amount: amount, remaining-balance: new-balance, block: block-height })
       (ok true)
     )
   )
 )
 
-;; @desc Re-Enter Protection: Path back to Aegis once crisis is resolved.
+;; @desc Re-Enter Protection: Path back to the protected vault once the crisis is resolved.
+;; Takes a vault contract as a parameter to avoid circular dependencies.
 ;; @param amount; sBTC to re-deposit.
 ;; @param token; The sBTC token contract.
-(define-public (re-enter-protection (amount uint) (token <sip-010-trait>))
+;; @param vault; The destination protected vault (must implement protected-vault-trait).
+(define-public (re-enter-protection (amount uint) (token <sip-010-trait>) (vault <protected-vault-trait>))
   (let
     (
-      (vault-status (unwrap! (contract-call? .aegis-vault get-vault-status) ERR-TRANSFER-FAILED))
       (current-balance (default-to u0 (map-get? safe-balances tx-sender)))
     )
-    ;; 1. Verify breaker is RESET
-    (asserts! (not (get breaker-active vault-status)) ERR-BREAKER-STILL-ACTIVE)
-    
-    ;; 2. Check balance
+    ;; 1. Check balance
     (asserts! (>= current-balance amount) ERR-INSUFFICIENT-BALANCE)
-    
-    ;; 3. Re-deposit on behalf of user
-    ;; This pulls funds from THIS contract and deposits into Aegis Vault
-    (try! (as-contract (contract-call? .aegis-vault deposit amount token)))
-    
-    ;; 4. Update Ledger
+
+    ;; 2. Re-deposit into the given vault on behalf of the user
+    ;; Note: Clarity prohibits circular inter-contract references, so we pass the vault at call time.
+    (try! (as-contract (contract-call? vault deposit amount token)))
+
+    ;; 3. Update Ledger
     (map-set safe-balances tx-sender (- current-balance amount))
     (var-set total-safe-tvl (- (var-get total-safe-tvl) amount))
-    
+
     (print { event: "re-entered-protection", user: tx-sender, amount: amount, block: block-height })
     (ok true)
   )
