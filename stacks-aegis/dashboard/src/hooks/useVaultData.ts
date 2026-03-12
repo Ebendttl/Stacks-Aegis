@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { baseUrl, CONTRACT_ADDRESSES, userSession, network } from '../lib/stacks-client';
 import { fetchSbtcBalance } from '../lib/contract-calls';
-import { uintCV, fetchCallReadOnlyFunction, cvToJSON, standardPrincipalCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, standardPrincipalCV } from '@stacks/transactions';
 
 export interface VaultData {
   stabilityScore: number;
@@ -85,7 +85,6 @@ export function useVaultData(): VaultData {
       // 3. Fetch Balances if connected
       let userBal = 0;
       let safeBal = 0;
-      let sbtcBal = 0;
       let userThreshold = globalThreshold;
 
       if (userAddress) {
@@ -169,23 +168,23 @@ export function useVaultData(): VaultData {
 
   // FIX 1 — Guarantee isBalanceLoading always resolves
   useEffect(() => {
-    if (!address) return;
+    if (!address || !address.startsWith("ST")) return;
 
-    console.log("[Aegis] Starting sBTC balance fetch for:", address);
+    console.log("[Aegis] Fetching sBTC balance for:", address);
     setIsBalanceLoading(true);
 
     fetchSbtcBalance(address)
       .then((balance) => {
-        console.log("[Aegis] Balance fetch resolved:", balance);
+        console.log("[Aegis] Balance resolved:", balance, "microunits");
         setUserSbtcWalletBalance(balance);
       })
       .catch((err) => {
-        console.error("[Aegis] Balance fetch rejected:", err);
+        console.error("[Aegis] Balance fetch failed:", err);
         setUserSbtcWalletBalance(0);
       })
       .finally(() => {
-        console.log("[Aegis] Balance fetch complete — setting isBalanceLoading to false");
         setIsBalanceLoading(false);
+        console.log("[Aegis] isBalanceLoading set to false");
       });
   }, [address]);
 

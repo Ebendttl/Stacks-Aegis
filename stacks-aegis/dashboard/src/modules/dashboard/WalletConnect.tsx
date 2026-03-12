@@ -23,11 +23,22 @@ export const useWalletStore = create<WalletStore>((set) => ({
         icon: window.location.origin + "/aegis-logo.png",
       },
       userSession,
-      onFinish: () => {
+      onFinish: (payload: any) => {
+        const { userSession } = payload;
         const userData = userSession.loadUserData();
-        set({
+        const testnetAddress = userData?.profile?.stxAddress?.testnet;
+
+        console.log("[Aegis] onFinish fired. Raw testnet address:", testnetAddress);
+
+        if (!testnetAddress || !testnetAddress.startsWith("ST")) {
+          console.error("[Aegis] Bad address from wallet:", testnetAddress);
+          return;
+        }
+
+        useWalletStore.setState({
+          address: testnetAddress,
           isConnected: true,
-          address: userData.profile.stxAddress.testnet,
+          network: "testnet"
         });
       },
     };

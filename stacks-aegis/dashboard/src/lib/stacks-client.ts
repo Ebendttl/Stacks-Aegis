@@ -7,17 +7,11 @@ export const appConfig = new AppConfig(['store_write', 'publish_data']);
 export const userSession = new UserSession({ appConfig });
 
 // Instantiate the testnet network
-const isDev = import.meta.env.DEV;
-export const baseUrl = isDev ? "/stacks-api" : (import.meta.env.VITE_STACKS_API_URL || "https://api.testnet.hiro.so");
-
-console.log("[Aegis] Initializing Stacks network. isDev:", isDev, "baseUrl:", baseUrl);
-
-// In @stacks/network v7, STACKS_TESTNET is a constant. 
-// We create a custom network object that fetchCallReadOnlyFunction can use.
 export const network = {
   ...STACKS_TESTNET,
-  coreApiUrl: baseUrl,
+  coreApiUrl: "https://api.testnet.hiro.so"
 };
+export const baseUrl = "https://api.testnet.hiro.so";
 
 // Replace ST... with your actual testnet deployer address after running deploy-testnet.sh.
 // These are loaded from environment variables in Vite (.env.testnet)

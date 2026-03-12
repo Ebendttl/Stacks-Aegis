@@ -12,7 +12,7 @@
  */
 
 import { fetchCallReadOnlyFunction, cvToValue, standardPrincipalCV } from "@stacks/transactions";
-import { network, CONTRACT_ADDRESSES, baseUrl } from "./stacks-client";
+import { network, CONTRACT_ADDRESSES } from "./stacks-client";
 
 interface VaultStatus {
   breakerActive: boolean;
@@ -128,59 +128,49 @@ export async function fetchSafeBalance(address: string) {
   }
 }
 
-/**
- * Fetches sBTC balance using the account balances API endpoint.
- * Ensures loading state resolution even on error.
- */
 export const fetchSbtcBalance = async (address: string): Promise<number> => {
-  if (!address) {
-    console.warn("[Aegis] fetchSbtcBalance: address is empty");
+  if (!address || !address.startsWith("ST")) {
+    console.error("[Aegis] fetchSbtcBalance: invalid address:", address);
     return 0;
   }
 
+  // Confirmed working token key from live testnet curl
+  const SBTC_TOKEN_KEY = "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token::sbtc-token";
+
   try {
-    const url = `${baseUrl}/v2/accounts/${address}/balances`;
-    console.log("[Aegis] sBTC Balance Request:", url);
+    const url = `https://api.testnet.hiro.so/extended/v1/address/${address}/balances`;
+    console.log("[Aegis] fetchSbtcBalance GET:", url);
 
     const res = await fetch(url);
-
     if (!res.ok) {
-      console.error("[Aegis] HTTP error:", res.status, res.statusText);
+      console.error("[Aegis] HTTP error:", res.status);
       return 0;
     }
 
     const data = await res.json();
-    console.log("[Aegis] Full balances response:", JSON.stringify(data, null, 2));
 
-    const fungibleTokens = data?.fungible_tokens ?? {};
-    const allKeys = Object.keys(fungibleTokens);
-    console.log("[Aegis] All fungible token keys:", allKeys);
+    // Primary lookup — use confirmed exact key
+    let rawBalance = data?.fungible_tokens?.[SBTC_TOKEN_KEY]?.balance;
 
-    // Find the sBTC key — it contains "sbtc-token" somewhere in the key string
-    const sbtcKey = allKeys.find(k =>
-      k.toLowerCase().includes("sbtc-token") ||
-      k.toLowerCase().includes("sbtc")
-    );
+    // Fallback — search for any key containing "sbtc" in case contract updates
+    if (rawBalance === undefined) {
+      const allKeys = Object.keys(data?.fungible_tokens ?? {});
+      console.log("[Aegis] Primary key not found. All keys:", allKeys);
+      const fallbackKey = allKeys.find(k => k.toLowerCase().includes("sbtc"));
+      if (fallbackKey) {
+        rawBalance = data.fungible_tokens[fallbackKey]?.balance;
+        console.log("[Aegis] Using fallback key:", fallbackKey);
+      }
+    }
 
-    if (!sbtcKey) {
-      console.warn("[Aegis] No sBTC key found in fungible_tokens. Keys present:", allKeys);
+    if (rawBalance === undefined) {
+      console.warn("[Aegis] No sBTC balance found for address:", address);
       return 0;
     }
 
-    console.log("[Aegis] Found sBTC key:", sbtcKey);
-    const rawBalance = fungibleTokens[sbtcKey]?.balance;
-    console.log("[Aegis] Raw balance value:", rawBalance, "type:", typeof rawBalance);
-
-    // Balance is always returned as a string by the Stacks API — parse it safely
     const parsed = parseInt(String(rawBalance), 10);
-
-    if (isNaN(parsed)) {
-      console.error("[Aegis] Balance parsed as NaN from raw value:", rawBalance);
-      return 0;
-    }
-
-    console.log("[Aegis] Final parsed balance in microunits:", parsed);
-    return parsed;
+    console.log("[Aegis] sBTC balance:", parsed, "microunits =", parsed / 100_000_000, "sBTC");
+    return isNaN(parsed) ? 0 : parsed;
 
   } catch (err) {
     console.error("[Aegis] fetchSbtcBalance threw:", err);
