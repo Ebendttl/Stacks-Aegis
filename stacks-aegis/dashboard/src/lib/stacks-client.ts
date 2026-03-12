@@ -2,8 +2,11 @@ import { STACKS_TESTNET } from "@stacks/network";
 import { createClient } from "@stacks/blockchain-api-client";
 import { AppConfig, UserSession } from '@stacks/connect';
 
-// singleton instances
-export const appConfig = new AppConfig(['store_write', 'publish_data']);
+// AppConfig and UserSession must be module-level singletons
+export const appConfig = new AppConfig(
+  ['store_write', 'publish_data'],
+  window.location.origin
+);
 export const userSession = new UserSession({ appConfig });
 
 // Instantiate the testnet network

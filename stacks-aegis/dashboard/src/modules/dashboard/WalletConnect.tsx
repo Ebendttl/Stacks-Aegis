@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { create } from 'zustand';
 import { Button } from '@/components/ui/button';
 import { userSession } from '../../lib/stacks-client';
@@ -23,12 +22,11 @@ export const useWalletStore = create<WalletStore>((set) => ({
         icon: window.location.origin + "/aegis-logo.png",
       },
       userSession,
-      onFinish: (payload: any) => {
-        const { userSession } = payload;
+      onFinish: () => {
         const userData = userSession.loadUserData();
         const testnetAddress = userData?.profile?.stxAddress?.testnet;
 
-        console.log("[Aegis] onFinish fired. Raw testnet address:", testnetAddress);
+        console.log("[Aegis] Wallet connected and session saved:", testnetAddress);
 
         if (!testnetAddress || !testnetAddress.startsWith("ST")) {
           console.error("[Aegis] Bad address from wallet:", testnetAddress);
@@ -41,50 +39,33 @@ export const useWalletStore = create<WalletStore>((set) => ({
           network: "testnet"
         });
       },
+      onCancel: () => {
+        console.log("[Aegis] Wallet connection cancelled by user");
+      },
     };
 
-    // Try showConnect first, then authenticate
     if (typeof showConnect === 'function') {
       showConnect(authOptions);
     } else if (typeof authenticate === 'function') {
       authenticate(authOptions);
-    } else {
-      console.error("Neither showConnect nor authenticate found in @stacks/connect", { showConnect, authenticate });
-      alert("Wallet connection module failed to initialize. Please refresh the page.");
     }
   },
   disconnect: () => {
+    userSession.signUserOut();
     set({ isConnected: false, address: null });
+    console.log("[Aegis] Wallet disconnected and session cleared");
   }
 }));
 
 export function WalletConnect() {
   const { address, isConnected, connect, disconnect } = useWalletStore();
 
-  useEffect(() => {
-    if (userSession?.isUserSignedIn()) {
-      try {
-        const userData = userSession.loadUserData();
-        if (userData?.profile?.stxAddress) {
-          useWalletStore.setState({
-            isConnected: true,
-            address: userData.profile.stxAddress.testnet || Object.values(userData.profile.stxAddress)[0],
-          });
-        }
-      } catch (e) {
-        console.error("Failed to load user data", e);
-      }
-    }
-  }, []);
 
   const handleConnect = () => {
     connect();
   };
 
   const handleDisconnect = () => {
-    if (userSession?.isUserSignedIn()) {
-      userSession.signUserOut();
-    }
     disconnect();
   };
 
