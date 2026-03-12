@@ -1,78 +1,86 @@
 ;; risk-oracle.clar
 ;; Stacks Aegis Risk Oracle (The Brain)
-;; Phase 3: Risk Oracle Implementation
+;; Single source of truth for sBTC peg health.
 
-(use-trait protected-vault-trait .aegis-traits.protected-vault-trait)
+(impl-trait .aegis-traits.risk-oracle-trait)
 
 ;; Errors
-(define-constant ERR-ORACLE-STALE (err u100))
-(define-constant ERR-VAULT-LOW-LIQUIDITY (err u101))
-(define-constant ERR-UNAUTHORIZED (err u103))
+(define-constant ERR-FEED-INVALID (err u100))
+(define-constant ERR-UNAUTHORIZED (err u101))
 
 ;; Constants
-(define-constant MAX-LATENCY u5) ;; maximum 5 blocks latency for oracle freshness
-(define-constant BASE-SCORE u100) ;; 100 represents 1.00 (perfect stability)
-(define-constant MIN-VAULT-LIQUIDITY u100000000) ;; simulated minimum liquidity (1.0 sBTC)
+;; tx-sender at deployment time. 
+;; In a mainnet production environment, this would be replaced by a DAO governance or multisig principal.
+(define-constant ADMIN tx-sender)
 
-;; Data Variables
-(define-data-var current-stability-score uint u100)
-(define-data-var last-oracle-update uint u0)
+;; Price Feed Constants (simulating Pyth + RedStone + On-Chain)
+;; Values represent sBTC/BTC ratio scaled to 1,000,000
+
+;; In production, this would be replaced by a Pyth contract-call.
+(define-constant FEED-PYTH u998500) ;; 0.9985 BTC
+
+;; In production, this would be replaced by a RedStone contract-call.
+(define-constant FEED-REDSTONE u997800) ;; 0.9978 BTC
+
+;; In production, this would be derived from a mock liquidity depth or another on-chain source.
+(define-constant FEED-ONCHAIN u999100) ;; 0.9991 BTC
+
+;; Normalization Constants
+(define-constant PEG-MIN u950000) ;; 0.95 BTC = Score 0
+(define-constant PEG-MAX u1000000) ;; 1.00 BTC = Score 100
+(define-constant SCORE-DIVISOR u500) ;; (1,000,000 - 950,000) / 100
+
+;; Data Maps
+(define-map protocol-safety-scores principal uint)
+
+;; Read-Only Functions
+
+;; @desc Fetch the current stability score of the sBTC peg.
+;; Calculated by averaging three feeds and normalizing to a 0-100 scale using integer arithmetic.
+;; @returns (response uint uint); (ok score) where score is 0-100.
+(define-read-only (get-stability-score)
+  (let
+    (
+      (average (/ (+ FEED-PYTH (+ FEED-REDSTONE FEED-ONCHAIN)) u3))
+    )
+    (if (< average PEG-MIN)
+      (ok u0) ;; Guard against negative results
+      (ok (/ (- average PEG-MIN) SCORE-DIVISOR))
+    )
+  )
+)
+
+;; @desc Returns individual feed values for transparency and comparison.
+;; @returns (response { pyth: uint, redstone: uint, onchain: uint } uint).
+(define-read-only (get-raw-feeds)
+  (ok {
+    pyth: FEED-PYTH,
+    redstone: FEED-REDSTONE,
+    onchain: FEED-ONCHAIN
+  })
+)
+
+;; @desc Get the safety score for a specific DeFi protocol.
+;; @param protocol; The principal address of the protocol contract.
+;; @returns uint; The score 0-100, defaults to 50 if unset.
+(define-read-only (get-protocol-score (protocol principal))
+  (default-to u50 (map-get? protocol-safety-scores protocol))
+)
 
 ;; Public Functions
 
-;; Update the oracle data and calculate the stability score
-;; The components are passed in to simulate reading from Pyth/RedStone
-;; score range: 0-100
-(define-public (update-oracle-data
-    (price-deviation uint) ;; deviation from peg (0-100)
-    (liquidity-depth uint) ;; available simulated liquidity
-    (volatility uint)      ;; volatility index (0-100)
-  )
+;; @desc Set the safety score for a specific protocol.
+;; @param protocol; The principal address of the protocol.
+;; @param score; The safety score to assign (0-100).
+;; @post Changes the state of the protocol-safety-scores map by updating the value for the given protocol.
+(define-public (set-protocol-score (protocol principal) (score uint))
   (begin
-    (let
-      (
-        (score (calculate-stability-score price-deviation volatility))
-      )
-      
-      ;; Update state
-      (var-set current-stability-score score)
-      (var-set last-oracle-update block-height)
-      (ok score)
-    )
-  )
-)
-
-;; Get the current stability score. Validates data freshness.
-(define-read-only (get-stability-score)
-  (let
-    ((freshness (- block-height (var-get last-oracle-update))))
-    (if (> freshness MAX-LATENCY)
-      ERR-ORACLE-STALE
-      (ok (var-get current-stability-score))
-    )
-  )
-)
-
-;; Liquidity Awareness: Check destination vault depth
-(define-public (check-vault-liquidity (vault <protected-vault-trait>))
-  (let
-    ((liquidity (unwrap! (contract-call? vault get-vault-liquidity) ERR-VAULT-LOW-LIQUIDITY)))
-    (if (< liquidity MIN-VAULT-LIQUIDITY)
-      ERR-VAULT-LOW-LIQUIDITY
-      (ok true)
-    )
-  )
-)
-
-;; Private Functions
-(define-private (calculate-stability-score (deviation uint) (volatility uint))
-  (let
-    (
-      (penalty (+ deviation volatility))
-    )
-    (if (>= penalty BASE-SCORE)
-      u0
-      (- BASE-SCORE penalty)
-    )
+    ;; Admin restricted access
+    (asserts! (is-eq tx-sender ADMIN) ERR-UNAUTHORIZED)
+    ;; Validate score range
+    (asserts! (<= score u100) ERR-FEED-INVALID)
+    ;; State mutation
+    (map-set protocol-safety-scores protocol score)
+    (ok true)
   )
 )
