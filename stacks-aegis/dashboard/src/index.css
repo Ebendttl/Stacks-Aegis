@@ -89,3 +89,14 @@
 .btn-brutal {
   @apply bg-white border-2 border-black shadow-brutal px-6 py-2 font-bold uppercase transition-all duration-75 active:translate-x-1 active:translate-y-1 active:shadow-none hover:bg-gray-100;
 }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(to right, #e5e7eb 8%, #d1d5db 18%, #e5e7eb 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}

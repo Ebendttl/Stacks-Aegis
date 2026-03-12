@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment values
+.env
+.env.*
+.env.testnet
+!.env.testnet.example
