@@ -1,8 +1,8 @@
 ;; aegis-traits.clar
 ;; Stacks Aegis Core Trait Architecture
-;; Phase 2: Core Trait Architecture
+;; Pure interface definitions for the Aegis protocol.
 
-;; SIP-010 Fungible Token Trait
+;; SIP-010 Fungible Token Trait (Standard)
 (define-trait sip-010-trait
   (
     ;; Transfer from the caller to a new principal
@@ -28,22 +28,33 @@
   )
 )
 
-;; Protected Vault Trait
+;; @desc Protected Vault Trait
+;; Interface for vaults that can be protected by the Aegis circuit breaker.
 (define-trait protected-vault-trait
   (
-    ;; Deposit funds into the vault
+    ;; @desc Deposit sBTC into the vault.
+    ;; @param amount; The amount of sBTC (uint) to deposit.
+    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
     (deposit (uint) (response bool uint))
 
-    ;; Standard withdraw funds
+    ;; @desc Standard withdrawal of sBTC from the vault.
+    ;; @param amount; The amount of sBTC (uint) to withdraw.
+    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
     (withdraw (uint) (response bool uint))
 
-    ;; Emergency exit mechanism for circuit breaker triggers
-    (emergency-exit () (response bool uint))
+    ;; @desc Emergency exit mechanism for circuit breaker triggers.
+    ;; @param amount; The amount of sBTC (uint) to be evacuated from the vault.
+    ;; @returns (response bool uint); Returns (ok true) on success, or (err uint) for error propagation.
+    (emergency-exit (uint) (response bool uint))
+  )
+)
 
-    ;; Get the current risk status of the vault
-    (get-risk-status () (response uint uint))
-
-    ;; Get the current liquidity available in the vault
-    (get-vault-liquidity () (response uint uint))
+;; @desc Risk Oracle Trait
+;; Interface for oracles providing stability scores for sBTC peg health.
+(define-trait risk-oracle-trait
+  (
+    ;; @desc Fetch the current stability score of the sBTC peg.
+    ;; @returns (response uint uint); Returns (ok uint) representing the score, or (err uint) for error propagation.
+    (get-stability-score () (response uint uint))
   )
 )
