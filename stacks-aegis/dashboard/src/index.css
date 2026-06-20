@@ -27,20 +27,98 @@
   }
 }
 
+html { 
+  scroll-padding-top: 80px; 
+  scroll-behavior: smooth;
+}
+
 @layer components {
-  .dashboard-grid {
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: 64px;
+    align-items: start;
+    padding: 80px 64px 60px;
+  }
+
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 32px;
+    flex-wrap: nowrap;
+    overflow: visible;
+  }
+
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .hero-stat-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: #666;
+    text-transform: uppercase;
+    font-family: monospace;
+  }
+
+  .hero-stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #f5a623;
+    font-family: monospace;
+  }
+
+  .dashboard-main-grid {
     display: grid;
     grid-template-columns: 320px 1fr;
-    grid-template-rows: auto auto auto;
     gap: 24px;
-    padding: 120px 64px 80px; /* Account for fixed header */
-    max-width: 1400px;
-    margin: 0 auto;
     align-items: start;
   }
 
+  .dashboard-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dashboard-right-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .security-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Last item spans full width if it's the only one in its row */
+  .security-grid > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    max-width: 50%;
+  }
+
+  .dashboard-grid {
+    padding-top: 32px;
+    padding-bottom: 48px;
+    padding-left: 64px;
+    padding-right: 64px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
   .neo-section {
-    padding: 80px 64px;
+    padding: 48px 64px; /* Reduced to 48px max as per Fix 7 */
     max-width: 1400px;
     margin: 0 auto;
   }

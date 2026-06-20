@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { Button } from '@/components/ui/button';
 import { userSession } from '../../lib/stacks-client';
 import { showConnect, authenticate } from '@stacks/connect';
 
@@ -71,28 +70,44 @@ export function WalletConnect() {
 
   if (!isConnected) {
     return (
-      <Button variant="outline" size="sm" onClick={handleConnect} className="rounded-none border-2 border-black font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] text-black">
+      <button onClick={handleConnect} style={{
+        background: 'transparent',
+        border: '2px solid #f5a623',
+        color: '#f5a623',
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        letterSpacing: '2px',
+        padding: '8px 16px',
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap'
+      }}>
         CONNECT WALLET
-      </Button>
+      </button>
     );
   }
 
-  const truncatedAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '';
+  const truncatedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
   return (
     <div className="flex items-center gap-2 group relative">
-      <div className="flex items-center gap-2 px-3 py-1.5 border-2 border-black bg-white font-mono text-sm font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+      <div 
+        onClick={handleDisconnect}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          border: '2px solid #333',
+          padding: '6px 12px',
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: '#fff',
+          cursor: 'pointer'
+        }}
+      >
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00ff88', display: 'inline-block' }} />
         {truncatedAddress}
       </div>
-      <Button 
-        variant="destructive" 
-        size="sm" 
-        className="absolute right-0 top-[110%] opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-none border-2 border-black font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)]"
-        onClick={handleDisconnect}
-      >
-        DISCONNECT
-      </Button>
     </div>
   );
 }

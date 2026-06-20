@@ -100,10 +100,10 @@ export function MissionControl() {
       </header>
 
       {/* SECTION 3 — Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center px-16 pt-32 pb-20 overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+      <section className="relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#f5a62308 1px, transparent 1px), linear-gradient(90deg, #f5a62308 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10 w-full max-w-7xl mx-auto">
+        <div className="hero-grid relative z-10 w-full max-w-7xl mx-auto">
           <div>
             <p className="text-[#f5a623] text-[10px] tracking-[4px] font-bold mb-6">STACKS ENDOWMENT — GRANT PROPOSAL 2026</p>
             <h2 className="hero-headline mb-8">
@@ -113,28 +113,28 @@ export function MissionControl() {
               Neither does Aegis. Automated principal protection for sBTC — the circuit breaker that pulls your Bitcoin to safety before you even wake up.
             </p>
             
-            <div className="flex flex-wrap gap-4 mb-12">
+            <div className="flex flex-wrap gap-4">
               <Button className="btn-brutal-primary h-auto py-4">PROTECT MY BITCOIN</Button>
               <Button className="btn-brutal-secondary h-auto py-4">READ THE DOCS</Button>
             </div>
 
-            <div className="flex gap-8">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 font-bold mb-1">STABILITY SCORE</span>
-                <span className="text-[#f5a623] font-bold">{vaultData.stabilityScore}/100</span>
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <span className="hero-stat-label">STABILITY SCORE</span>
+                <span className="hero-stat-value">{vaultData.stabilityScore}/100</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 font-bold mb-1">REACTION TIME</span>
-                <span className="text-white font-bold">{"<"} 2 BLOCKS</span>
+              <div className="hero-stat">
+                <span className="hero-stat-label">REACTION TIME</span>
+                <span className="hero-stat-value">{"<"} 2 BLOCKS</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 font-bold mb-1">GOVERNANCE</span>
-                <span className="text-white font-bold">ZERO ADMIN KEYS</span>
+              <div className="hero-stat">
+                <span className="hero-stat-label">GOVERNANCE</span>
+                <span className="hero-stat-value">ZERO ADMIN KEYS</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="hero-right items-center">
             <div className="relative group">
                <div className={`absolute inset-0 rounded-full blur-3xl opacity-20 transition-colors duration-500 ${vaultData.breakerActive ? 'bg-red-500' : 'bg-[#f5a623] group-hover:opacity-30'}`}></div>
                <div className="w-[300px] h-[300px] relative z-10">
@@ -151,82 +151,84 @@ export function MissionControl() {
 
       {/* SECTION 4 — Dashboard Grid */}
       <main id="dashboard" className="dashboard-grid bg-[#0a0a0a]">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="brutal-card h-[380px]">
-            <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">Active Protection</h3>
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase text-[#f5a623]">Threshold: {"<"} 0.{threshold[0]}</label>
-                  <span className="text-[10px] text-white bg-black px-2 py-0.5 border border-[#2a2a2a]">BALANCED</span>
+        <div className="dashboard-main-grid">
+          {/* Left Column */}
+          <div className="dashboard-left">
+            <div className="brutal-card">
+              <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">Active Protection</h3>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black uppercase text-[#f5a623]">Threshold: {"<"} 0.{threshold[0]}</label>
+                    <span className="text-[10px] text-white bg-black px-2 py-0.5 border border-[#2a2a2a]">BALANCED</span>
+                  </div>
+                  <Slider 
+                    value={threshold} 
+                    onValueChange={setThreshold} 
+                    max={99} 
+                    min={0} 
+                    step={1} 
+                    className="py-4"
+                  />
                 </div>
-                <Slider 
-                  value={threshold} 
-                  onValueChange={setThreshold} 
-                  max={99} 
-                  min={0} 
-                  step={1} 
-                  className="py-4"
-                />
+                <p className="text-[10px] text-gray-400 leading-relaxed italic border-l-2 border-[#f5a623] pl-4">
+                  Balanced Profile: Faster exits, moderate yield interruption risk. High sensitivity to peg deviation.
+                </p>
+                <Button 
+                  onClick={handleApplyConfig} 
+                  className="w-full bg-[#f5a623] text-black border-2 border-black font-bold uppercase shadow-[4px_4px_0_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0_#000]"
+                >
+                  APPLY CONFIGURATION
+                </Button>
               </div>
-              <p className="text-[10px] text-gray-400 leading-relaxed italic border-l-2 border-[#f5a623] pl-4">
-                Balanced Profile: Faster exits, moderate yield interruption risk. High sensitivity to peg deviation.
-              </p>
-              <Button 
-                onClick={handleApplyConfig} 
-                className="w-full bg-[#f5a623] text-black border-2 border-black font-bold uppercase shadow-[4px_4px_0_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0_#000]"
-              >
-                APPLY CONFIGURATION
-              </Button>
+            </div>
+
+            <div className="brutal-card">
+               <RiskRadar data={vaultData} />
             </div>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto brutal-card">
-             <RiskRadar data={vaultData} />
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-             {vaultData.breakerActive ? (
-                <div className="col-span-2 brutal-card border-red-600 shadow-[4px_4px_0_#991b1b] bg-[#1a0b0b]">
-                   <h3 className="text-red-500 font-black italic text-lg mb-2">EMERGENCY SYSTEM ACTIVATED</h3>
-                   <p className="text-xs text-red-400 font-bold leading-relaxed">
-                     Automated withdrawal sequence in progress. Your Bitcoin principal is being redirected to the secure Aegis safe-vault.
-                   </p>
-                   <div className="mt-6 flex gap-4">
-                      <Button variant="outline" className="flex-1 border-white text-white hover:bg-white/10"
-                        onClick={() => txWithdraw(vaultData.userVaultBalance, () => vaultData.refetch())}>
-                        RECOVER TO WALLET
-                      </Button>
-                      <Button variant="outline" className="flex-1 border-white/20 text-white/50" disabled>
-                        RE-ENTER PROTECTION
-                      </Button>
-                   </div>
-                </div>
-             ) : (
-                <>
-                  <div className="brutal-card flex flex-col items-center justify-center text-center">
-                    <StabilityScoreGauge score={vaultData.stabilityScore} />
+          {/* Right Column */}
+          <div className="dashboard-right">
+            <div className="dashboard-right-top">
+               {vaultData.breakerActive ? (
+                  <div className="col-span-2 brutal-card border-red-600 shadow-[4px_4px_0_#991b1b] bg-[#1a0b0b]">
+                     <h3 className="text-red-500 font-black italic text-lg mb-2">EMERGENCY SYSTEM ACTIVATED</h3>
+                     <p className="text-xs text-red-400 font-bold leading-relaxed">
+                       Automated withdrawal sequence in progress. Your Bitcoin principal is being redirected to the secure Aegis safe-vault.
+                     </p>
+                     <div className="mt-6 flex gap-4">
+                        <Button variant="outline" className="flex-1 border-white text-white hover:bg-white/10"
+                          onClick={() => txWithdraw(vaultData.userVaultBalance, () => vaultData.refetch())}>
+                          RECOVER TO WALLET
+                        </Button>
+                        <Button variant="outline" className="flex-1 border-white/20 text-white/50" disabled>
+                          RE-ENTER PROTECTION
+                        </Button>
+                     </div>
                   </div>
-                  <div className="brutal-card flex flex-col justify-center items-center text-center">
-                    <Activity className={`h-16 w-16 mb-4 ${vaultData.breakerActive ? 'text-red-500' : 'text-[#f5a623]'}`} />
-                    <p className="font-black text-3xl">NOMINAL</p>
-                    <p className="text-[10px] font-bold text-gray-500 tracking-[3px] mt-2">SYSTEM STATUS</p>
-                  </div>
-                </>
-             )}
-          </div>
+               ) : (
+                  <>
+                    <div className="brutal-card flex flex-col items-center justify-center text-center">
+                      <StabilityScoreGauge score={vaultData.stabilityScore} />
+                    </div>
+                    <div className="brutal-card flex flex-col justify-center items-center text-center">
+                      <Activity className={`h-16 w-16 mb-4 ${vaultData.breakerActive ? 'text-red-500' : 'text-[#f5a623]'}`} />
+                      <p className="font-black text-3xl">NOMINAL</p>
+                      <p className="text-[10px] font-bold text-gray-500 tracking-[3px] mt-2">SYSTEM STATUS</p>
+                    </div>
+                  </>
+               )}
+            </div>
 
-          <div className="brutal-card">
-            <VaultExposure data={vaultData} />
-          </div>
+            <div className="brutal-card mt-6">
+              <VaultExposure data={vaultData} />
+            </div>
 
-          <div className="brutal-card">
-            <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">Incident Timeline</h3>
-            <EventTimeline />
+            <div className="brutal-card mt-6">
+              <h3 className="text-xs font-bold tracking-widest text-gray-500 mb-6 uppercase">Incident Timeline</h3>
+              <EventTimeline />
+            </div>
           </div>
         </div>
       </main>
@@ -296,7 +298,7 @@ export function MissionControl() {
       </section>
 
       {/* SECTION 7 — Professional Footer */}
-      <footer className="bg-[#0a0a0a] border-t-4 border-[#f5a623] pt-20 pb-10 px-16">
+      <footer className="bg-[#0a0a0a] border-t-4 border-[#f5a623] pt-12 pb-10 px-16">
          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20 max-w-7xl mx-auto">
             <div>
                <div className="flex items-center gap-3 mb-6">
