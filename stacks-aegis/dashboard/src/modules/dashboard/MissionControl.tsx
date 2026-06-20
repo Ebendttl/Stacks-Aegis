@@ -2,21 +2,20 @@ import { useEffect, useState } from 'react';
 import { Activity, Eye, Zap, Shield, CheckCircle2, Menu, ExternalLink, Twitter, Github } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { RiskRadar } from "../risk/RiskRadar"
 import { StabilityScoreGauge } from "../risk/StabilityScoreGauge"
 import { VaultExposure } from "../vaults/VaultExposure"
 import { EventTimeline } from "./EventTimeline"
 import { WalletConnect, useWalletStore } from "./WalletConnect"
 import { useVaultData } from "../../hooks/useVaultData"
-import { openContractCall, showConnect } from "@stacks/connect"
+import { openContractCall } from "@stacks/connect"
 import { uintCV } from "@stacks/transactions"
-import { network, CONTRACT_ADDRESSES, userSession } from "../../lib/stacks-client"
+import { network, CONTRACT_ADDRESSES } from "../../lib/stacks-client"
 import { toast, txWithdraw } from "../../lib/transactions"
 import Logo from "../../assets/aegis-logo.svg"
 
 export function MissionControl() {
-  const { isConnected, address } = useWalletStore()
+  const { isConnected } = useWalletStore()
   const vaultData = useVaultData()
   const [threshold, setThreshold] = useState([vaultData.threshold || 95])
   

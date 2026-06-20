@@ -1,6 +1,6 @@
 import { openContractCall } from '@stacks/connect';
 import { uintCV, contractPrincipalCV, Pc } from '@stacks/transactions';
-import { CONTRACT_ADDRESSES, SBTC_CONTRACT_ADDRESS, network } from './stacks-client';
+import { network } from './stacks-client';
 import { useWalletStore } from '../modules/dashboard/WalletConnect';
 
 // Mini visual toast helper since a fully loaded Shadcn toaster isn't initialized
