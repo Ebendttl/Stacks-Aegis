@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 125" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield Shape -->
+  <path d="M60 10L10 32C10 32 10 90 60 115C110 90 110 32 110 32L60 10Z" fill="black" stroke="#f5a623" stroke-width="4" stroke-linejoin="miter"/>
+  
+  <!-- Circuit/Lightning Bolt -->
+  <path d="M60 30L40 65H55L45 95L80 50H65L75 30" stroke="#f5a623" stroke-width="3" stroke-linecap="square" fill="none"/>
+</svg>
